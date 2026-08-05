@@ -33,11 +33,11 @@ export const FEST = {
   dominio: "festvaletimoteo.com.br",
 
   /**
-   * Login com Google. Só ative depois de configurar o provedor Google no
-   * painel do Supabase (Authentication > Providers). Com false, o botão
-   * some das telas de login e cadastro.
+   * Endereço completo do site, com https e sem barra no fim.
+   * Usado para montar as URLs absolutas da prévia de link
+   * (WhatsApp, Facebook, Instagram, X) — links relativos não funcionam ali.
    */
-  googleHabilitado: false,
+  urlBase: "https://www.festvaletimoteo.com.br",
 
   contato: {
     email: "",
@@ -52,17 +52,55 @@ export const FEST = {
    */
   imagens: {
     logo: "/img/logo.png",
+    /** Imagem de fundo do topo (cobre a seção inteira, em opacidade reduzida). */
     hero: "",
-    ogImage: "/img/logo.png",
+    /** Recorte da atração principal, exibido no rodapé do topo. Fundo transparente. */
+    heroBanda: "/img/gertrudes-banda.webp",
+    heroBandaLegenda: "Atração principal — banda Gertrudes",
+    /**
+     * Arte da prévia de link (WhatsApp, Facebook, Instagram, X).
+     * Formato ideal: 1200x630 px, JPG ou PNG, abaixo de 300 KB.
+     * Ao trocar o arquivo, mude também o nome — as redes guardam a
+     * imagem em cache por dias e só reconhecem uma URL nova.
+     */
+    ogImage: "/img/og-banner.jpg",
+    ogImageLargura: 1200,
+    ogImageAltura: 630,
+    ogImageAlt: "4º Fest Vale — salve essa data: 8 de maio de 2027",
   },
 
+  /**
+   * Atrações do line-up.
+   * Campos opcionais do card de destaque:
+   *   `bio`        — parágrafos extras exibidos abaixo da descrição
+   *   `integrantes`— lista "Nome — instrumento"
+   *   `tags`       — etiquetas de estilo/repertório
+   *   `redes`      — links (tipo: instagram | youtube | spotify | site)
+   *   `videoId`    — ID de vídeo do YouTube para o player embutido
+   */
   atracoes: [
     {
       nome: "Gertrudes",
       papel: "Atração principal",
       descricao:
-        "A banda Gertrudes sobe ao palco do Fest Vale com o show que mistura rock e MPB e já rodou o Vale do Aço.",
-      imagem: "",
+        "Nome tradicional do Vale do Aço, a Gertrudes construiu sua reputação tocando clássicos do rock com execução precisa — e é ela que fecha a noite do Fest Vale.",
+      bio: [
+        "O repertório passeia pelo rock e pop dos anos 70 e 80, do internacional ao nacional: a-ha, Simply Red, R.E.M., Men at Work e Dire Straits convivem com Iron Maiden, Bon Jovi, Metallica, Guns N' Roses e Pink Floyd.",
+        "Com passagens por casas e eventos de toda a região — incluindo o Dia Mundial do Rock no Shopping Vale do Aço e o Sunset Classic Rock do Instituto Usiminas — a banda faz o tipo de show em que a plateia canta junto do começo ao fim.",
+      ],
+      integrantes: [
+        "Jayme Souz — voz e guitarra",
+        "Brenner Fernandes — guitarra",
+        "Sid Bass — baixo",
+        "Hilder Anício — bateria",
+      ],
+      tags: ["Classic rock", "Pop anos 70/80", "Rock nacional"],
+      redes: [
+        { tipo: "instagram", url: "https://www.instagram.com/bandagertrudesoficial/", label: "@bandagertrudesoficial" },
+        { tipo: "youtube", url: "https://www.youtube.com/c/bandagertrudesoficial", label: "Banda Gertrudes Oficial" },
+      ],
+      videoId: "a31dapQxl9I",
+      imagem: "/img/gertrudes-banda.webp",
       destaque: true,
     },
     {
@@ -79,7 +117,18 @@ export const FEST = {
       imagem: "",
       destaque: false,
     },
-  ],
+  ] as ReadonlyArray<{
+    nome: string;
+    papel: string;
+    descricao: string;
+    imagem: string;
+    destaque: boolean;
+    bio?: readonly string[];
+    integrantes?: readonly string[];
+    tags?: readonly string[];
+    redes?: ReadonlyArray<{ tipo: "instagram" | "youtube" | "spotify" | "site"; url: string; label: string }>;
+    videoId?: string;
+  }>,
 
   /** Usados enquanto o evento ainda não foi cadastrado no painel do organizador. */
   lotesExemplo: [
@@ -134,6 +183,10 @@ export const FEST = {
     },
   ],
 } as const;
+
+/** Transforma um caminho do site ("/img/x.jpg") em URL absoluta, exigida pelas prévias de link. */
+export const absUrl = (path: string) =>
+  path.startsWith("http") ? path : `${FEST.urlBase}${path.startsWith("/") ? "" : "/"}${path}`;
 
 export const mapsUrl = (query: string) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
