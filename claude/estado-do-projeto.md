@@ -118,6 +118,20 @@ pré-renderizado de `/login` e `/cadastro` não contém mais o botão.
 Nota: a mensagem deste commit menciona os títulos das páginas por pedido do
 Ricardo, mas essa parte já tinha sido feita antes, no commit `54116b7`.
 
+### 05/08/2026 — Flag do Google restaurada em `fest.ts`
+
+O commit `ee9fc6b` (dados da banda Gertrudes e `urlBase`) reescreveu
+`src/lib/fest.ts` a partir de uma versão anterior e **apagou a flag
+`googleHabilitado`**, deixando o `main` com `npx tsc --noEmit` quebrado —
+`login.tsx` e `cadastro.tsx` referenciam a propriedade. A flag foi
+recolocada, agora logo depois de `urlBase` (o `urlBase` passou a ocupar a
+posição imediatamente após `dominio`).
+
+**Lição para as próximas edições de `src/lib/fest.ts`:** editar sempre a
+partir da versão mais recente do repositório (`git pull` antes), porque
+substituir o arquivo inteiro por uma cópia antiga apaga alterações já
+publicadas sem gerar conflito no Git.
+
 ## 6. Pendências e pontos de atenção
 
 - **Login com Google está desligado.** Para reativar: configurar o provedor no
