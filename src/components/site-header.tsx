@@ -1,5 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { usePapeis } from "@/hooks/use-papeis";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { FEST } from "@/lib/fest";
@@ -16,11 +17,13 @@ const ancoras = [
   { href: "#atracoes", label: "Atrações" },
   { href: "#ingressos", label: "Ingressos" },
   { href: "#sobre", label: "O evento" },
+  { href: "#edicoes", label: "Edições anteriores" },
   { href: "#local", label: "Local" },
 ];
 
 export function SiteHeader() {
   const { user } = useAuth();
+  const { organizador, podeValidar } = usePapeis();
   const naHome = useRouterState({ select: (s) => s.location.pathname === "/" });
 
   const handleLogout = async () => {
@@ -82,12 +85,16 @@ export function SiteHeader() {
                 <DropdownMenuItem asChild>
                   <Link to="/meus-ingressos"><Ticket className="mr-2 h-4 w-4" />Meus ingressos</Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/organizador"><LayoutDashboard className="mr-2 h-4 w-4" />Painel do organizador</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/validacao"><ScanLine className="mr-2 h-4 w-4" />Validação na entrada</Link>
-                </DropdownMenuItem>
+                {organizador && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/organizador"><LayoutDashboard className="mr-2 h-4 w-4" />Painel do organizador</Link>
+                  </DropdownMenuItem>
+                )}
+                {podeValidar && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/validacao"><ScanLine className="mr-2 h-4 w-4" />Validação na entrada</Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />Sair
