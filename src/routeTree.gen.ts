@@ -23,6 +23,7 @@ import { Route as AuthenticatedValidacaoIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedOrganizadorEventosNovoRouteImport } from './routes/_authenticated/organizador.eventos.novo'
 import { Route as AuthenticatedPdvEventIdCaixaRouteImport } from './routes/_authenticated/pdv.$eventId.caixa'
 import { Route as AuthenticatedPdvEventIdEstoqueRouteImport } from './routes/_authenticated/pdv.$eventId.estoque'
+import { Route as AuthenticatedPdvEventIdIngressosRouteImport } from './routes/_authenticated/pdv.$eventId.ingressos'
 import { Route as AuthenticatedPdvEventIdRelatorioRouteImport } from './routes/_authenticated/pdv.$eventId.relatorio'
 import { Route as AuthenticatedPdvEventIdRetiradaRouteImport } from './routes/_authenticated/pdv.$eventId.retirada'
 import { Route as AuthenticatedValidacaoEventIdScannerRouteImport } from './routes/_authenticated/validacao.$eventId.scanner'
@@ -106,6 +107,12 @@ const AuthenticatedPdvEventIdEstoqueRoute =
     path: '/pdv/$eventId/estoque',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedPdvEventIdIngressosRoute =
+  AuthenticatedPdvEventIdIngressosRouteImport.update({
+    id: '/pdv/$eventId/ingressos',
+    path: '/pdv/$eventId/ingressos',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPdvEventIdRelatorioRoute =
   AuthenticatedPdvEventIdRelatorioRouteImport.update({
     id: '/pdv/$eventId/relatorio',
@@ -157,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/organizador/eventos/novo': typeof AuthenticatedOrganizadorEventosNovoRoute
   '/pdv/$eventId/caixa': typeof AuthenticatedPdvEventIdCaixaRoute
   '/pdv/$eventId/estoque': typeof AuthenticatedPdvEventIdEstoqueRoute
+  '/pdv/$eventId/ingressos': typeof AuthenticatedPdvEventIdIngressosRoute
   '/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
   '/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
   '/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
@@ -177,6 +185,7 @@ export interface FileRoutesByTo {
   '/organizador/eventos/novo': typeof AuthenticatedOrganizadorEventosNovoRoute
   '/pdv/$eventId/caixa': typeof AuthenticatedPdvEventIdCaixaRoute
   '/pdv/$eventId/estoque': typeof AuthenticatedPdvEventIdEstoqueRoute
+  '/pdv/$eventId/ingressos': typeof AuthenticatedPdvEventIdIngressosRoute
   '/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
   '/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
   '/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
@@ -200,6 +209,7 @@ export interface FileRoutesById {
   '/_authenticated/organizador/eventos/novo': typeof AuthenticatedOrganizadorEventosNovoRoute
   '/_authenticated/pdv/$eventId/caixa': typeof AuthenticatedPdvEventIdCaixaRoute
   '/_authenticated/pdv/$eventId/estoque': typeof AuthenticatedPdvEventIdEstoqueRoute
+  '/_authenticated/pdv/$eventId/ingressos': typeof AuthenticatedPdvEventIdIngressosRoute
   '/_authenticated/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
   '/_authenticated/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
   '/_authenticated/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
@@ -223,6 +233,7 @@ export interface FileRouteTypes {
     | '/organizador/eventos/novo'
     | '/pdv/$eventId/caixa'
     | '/pdv/$eventId/estoque'
+    | '/pdv/$eventId/ingressos'
     | '/pdv/$eventId/relatorio'
     | '/pdv/$eventId/retirada'
     | '/validacao/$eventId/scanner'
@@ -243,6 +254,7 @@ export interface FileRouteTypes {
     | '/organizador/eventos/novo'
     | '/pdv/$eventId/caixa'
     | '/pdv/$eventId/estoque'
+    | '/pdv/$eventId/ingressos'
     | '/pdv/$eventId/relatorio'
     | '/pdv/$eventId/retirada'
     | '/validacao/$eventId/scanner'
@@ -265,6 +277,7 @@ export interface FileRouteTypes {
     | '/_authenticated/organizador/eventos/novo'
     | '/_authenticated/pdv/$eventId/caixa'
     | '/_authenticated/pdv/$eventId/estoque'
+    | '/_authenticated/pdv/$eventId/ingressos'
     | '/_authenticated/pdv/$eventId/relatorio'
     | '/_authenticated/pdv/$eventId/retirada'
     | '/_authenticated/validacao/$eventId/scanner'
@@ -382,6 +395,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPdvEventIdEstoqueRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/pdv/$eventId/ingressos': {
+      id: '/_authenticated/pdv/$eventId/ingressos'
+      path: '/pdv/$eventId/ingressos'
+      fullPath: '/pdv/$eventId/ingressos'
+      preLoaderRoute: typeof AuthenticatedPdvEventIdIngressosRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/pdv/$eventId/relatorio': {
       id: '/_authenticated/pdv/$eventId/relatorio'
       path: '/pdv/$eventId/relatorio'
@@ -460,6 +480,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedValidacaoIndexRoute: typeof AuthenticatedValidacaoIndexRoute
   AuthenticatedPdvEventIdCaixaRoute: typeof AuthenticatedPdvEventIdCaixaRoute
   AuthenticatedPdvEventIdEstoqueRoute: typeof AuthenticatedPdvEventIdEstoqueRoute
+  AuthenticatedPdvEventIdIngressosRoute: typeof AuthenticatedPdvEventIdIngressosRoute
   AuthenticatedPdvEventIdRelatorioRoute: typeof AuthenticatedPdvEventIdRelatorioRoute
   AuthenticatedPdvEventIdRetiradaRoute: typeof AuthenticatedPdvEventIdRetiradaRoute
   AuthenticatedValidacaoEventIdScannerRoute: typeof AuthenticatedValidacaoEventIdScannerRoute
@@ -472,6 +493,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedValidacaoIndexRoute: AuthenticatedValidacaoIndexRoute,
   AuthenticatedPdvEventIdCaixaRoute: AuthenticatedPdvEventIdCaixaRoute,
   AuthenticatedPdvEventIdEstoqueRoute: AuthenticatedPdvEventIdEstoqueRoute,
+  AuthenticatedPdvEventIdIngressosRoute: AuthenticatedPdvEventIdIngressosRoute,
   AuthenticatedPdvEventIdRelatorioRoute: AuthenticatedPdvEventIdRelatorioRoute,
   AuthenticatedPdvEventIdRetiradaRoute: AuthenticatedPdvEventIdRetiradaRoute,
   AuthenticatedValidacaoEventIdScannerRoute:
