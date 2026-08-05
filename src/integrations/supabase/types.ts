@@ -102,6 +102,7 @@ export type Database = {
           id: string
           name: string | null
           user_id: string
+          cargo: Database["public"]["Enums"]["staff_cargo"]
           pode_validar: boolean
           pode_vender: boolean
           pode_autorizar_cortesia: boolean
@@ -115,6 +116,7 @@ export type Database = {
           id?: string
           name?: string | null
           user_id: string
+          cargo?: Database["public"]["Enums"]["staff_cargo"]
         }
         Update: {
           created_at?: string
@@ -124,6 +126,7 @@ export type Database = {
           id?: string
           name?: string | null
           user_id?: string
+          cargo?: Database["public"]["Enums"]["staff_cargo"]
           pode_validar?: boolean
           pode_vender?: boolean
           pode_autorizar_cortesia?: boolean
@@ -176,6 +179,28 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cash_movements: {
+        Row: {
+          amount_cents: number
+          authorized_by: string
+          created_at: string
+          event_id: string
+          id: string
+          operator_id: string | null
+          reason: string
+          station: string | null
+        }
+        Insert: {
+          amount_cents: number
+          authorized_by: string
+          event_id: string
+          operator_id?: string | null
+          reason: string
+          station?: string | null
+        }
+        Update: { reason?: string }
+        Relationships: []
       }
       products: {
         Row: {
@@ -415,6 +440,9 @@ export type Database = {
           status: Database["public"]["Enums"]["order_status"]
           stock_reserved: boolean
           total_cents: number
+          origem: string
+          sold_by: string | null
+          station: string | null
         }
         Insert: {
           attendees?: Json
@@ -668,6 +696,28 @@ export type Database = {
       }
       event_checkin_stats: { Args: { _event_id: string }; Returns: Json }
       pode_vender: { Args: { _event_id: string; _user_id?: string }; Returns: boolean }
+      pode_gerenciar_evento: { Args: { _event_id: string; _user_id?: string }; Returns: boolean }
+      is_master: { Args: { _user_id?: string }; Returns: boolean }
+      pos_sangria: {
+        Args: {
+          _event_id: string
+          _amount_cents: number
+          _reason: string
+          _station?: string
+          _operator_id?: string
+        }
+        Returns: Json
+      }
+      vender_ingresso_portaria: {
+        Args: {
+          _event_id: string
+          _batch_id: string
+          _qty: number
+          _payment_method: Database["public"]["Enums"]["pos_payment"]
+          _station?: string
+        }
+        Returns: Json
+      }
       pode_autorizar_cortesia: { Args: { _event_id: string; _user_id?: string }; Returns: boolean }
       pos_registrar_venda: {
         Args: {
@@ -720,7 +770,8 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "organizer" | "attendee" | "staff"
+      app_role: "organizer" | "attendee" | "staff" | "master" | "caixa"
+      staff_cargo: "organizador" | "caixa" | "portaria"
       stock_kind: "entrada" | "venda" | "cortesia" | "perda" | "ajuste" | "estorno"
       pos_payment: "dinheiro" | "cartao" | "pix" | "cortesia"
       pos_status: "paga" | "cancelada"
@@ -854,7 +905,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["organizer", "attendee", "staff"],
+      app_role: ["organizer", "attendee", "staff", "master", "caixa"],
+      staff_cargo: ["organizador", "caixa", "portaria"],
       stock_kind: ["entrada", "venda", "cortesia", "perda", "ajuste", "estorno"],
       pos_payment: ["dinheiro", "cartao", "pix", "cortesia"],
       pos_status: ["paga", "cancelada"],
