@@ -14,7 +14,7 @@ import {
 } from "@/lib/pdv";
 import { toast } from "sonner";
 import {
-  ArrowLeft, Minus, Plus, Trash2, Loader2, CheckCircle2, Gift, FlaskConical, Printer,
+  ArrowLeft, Minus, Plus, Trash2, Loader2, CheckCircle2, Gift, FlaskConical, Printer, ChevronDown,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pdv/$eventId/caixa")({
@@ -32,6 +32,7 @@ function Caixa() {
   const [venda, setVenda] = useState<VendaRegistrada | null>(null);
   const [cortesiaAberta, setCortesiaAberta] = useState(false);
   const [motivoCortesia, setMotivoCortesia] = useState("");
+  const [gavetaAberta, setGavetaAberta] = useState(false);
 
   const { data: produtos, isLoading } = useQuery({
     queryKey: ["pdv-produtos", eventId],
@@ -100,6 +101,7 @@ function Caixa() {
     setCarrinho([]);
     setCortesiaAberta(false);
     setMotivoCortesia("");
+    setGavetaAberta(false);
   };
 
   const cobrar = async (meio: MeioPagamento) => {
@@ -173,7 +175,7 @@ function Caixa() {
 
   /* ──────────────────────────────────────────────────────── tela do caixa */
   return (
-    <div className="container mx-auto max-w-6xl px-4 py-6">
+    <div className="container mx-auto max-w-6xl px-4 py-6 pb-28 lg:pb-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <Link to="/pdv" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="mr-1 h-4 w-4" />PDV
@@ -246,7 +248,8 @@ function Caixa() {
         </div>
 
         {/* ---------------------------------------------------- carrinho */}
-        <Card className="h-fit p-5 lg:sticky lg:top-20">
+        {/* -------------------------------- carrinho: coluna no desktop */}
+        <Card className="hidden h-fit p-5 lg:sticky lg:top-20 lg:block">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">
               Pedido {unidades > 0 && <span className="text-muted-foreground">({unidades})</span>}
@@ -346,6 +349,126 @@ function Caixa() {
           </div>
         </Card>
       </div>
+
+      {/* --------------------- no celular o pedido vira barra fixa + gaveta */}
+      {carrinho.length > 0 && !gavetaAberta && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border/60 bg-background/95 p-3 backdrop-blur lg:hidden">
+          <Button size="lg" className="h-14 w-full justify-between text-base" onClick={() => setGavetaAberta(true)}>
+            <span>{unidades} {unidades === 1 ? "item" : "itens"}</span>
+            <span className="font-display text-xl font-bold tabular-nums">{brl(total)}</span>
+          </Button>
+        </div>
+      )}
+
+      {gavetaAberta && (
+        <div className="fixed inset-0 z-40 overflow-y-auto bg-background lg:hidden">
+          <div className="sticky top-0 flex items-center justify-between border-b border-border/60 bg-background px-4 py-3">
+            <span className="font-display text-lg font-semibold">Fechar pedido</span>
+            <Button variant="ghost" size="sm" onClick={() => setGavetaAberta(false)}>
+              <ChevronDown className="mr-1 h-4 w-4" />Voltar ao cardápio
+            </Button>
+          </div>
+          <div className="p-4 pb-24">
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-lg font-semibold">
+              Pedido {unidades > 0 && <span className="text-muted-foreground">({unidades})</span>}
+            </h2>
+            {carrinho.length > 0 && (
+              <Button variant="ghost" size="sm" onClick={limpar}>
+                <Trash2 className="mr-1 h-4 w-4" />Limpar
+              </Button>
+            )}
+          </div>
+
+          {carrinho.length === 0 ? (
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Toque nos produtos para montar o pedido.
+            </p>
+          ) : (
+            <div className="mt-4 space-y-2">
+              {carrinho.map((i) => (
+                <div key={i.produto.id} className="flex items-center gap-2 rounded-lg border border-border/60 p-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">{i.produto.name}</div>
+                    <div className="text-xs text-muted-foreground">{brl(i.qtd * i.produto.price_cents)}</div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => mudarQtd(i.produto.id, -1)}>
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="w-7 text-center font-semibold tabular-nums">{i.qtd}</span>
+                    <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => mudarQtd(i.produto.id, +1)}>
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-5 flex items-center justify-between border-t border-border/60 pt-4">
+            <span className="text-sm text-muted-foreground">Total</span>
+            <span className="font-display text-3xl font-bold tabular-nums">{brl(total)}</span>
+          </div>
+
+          <div className="mt-4 space-y-2">
+            {MEIOS.map((m) => (
+              <Button
+                key={m.id}
+                size="lg"
+                className="h-14 w-full justify-between text-base"
+                disabled={cobrando || carrinho.length === 0}
+                onClick={() => cobrar(m.id)}
+              >
+                <span>{m.label}</span>
+                {cobrando ? <Loader2 className="h-4 w-4 animate-spin" /> : <span className="text-sm opacity-80">{m.dica}</span>}
+              </Button>
+            ))}
+
+            {podeCortesia && (
+              <>
+                {!cortesiaAberta ? (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="h-12 w-full"
+                    disabled={carrinho.length === 0}
+                    onClick={() => setCortesiaAberta(true)}
+                  >
+                    <Gift className="mr-2 h-4 w-4" />Cortesia
+                  </Button>
+                ) : (
+                  <div className="space-y-2 rounded-lg border border-primary/50 bg-primary/10 p-3">
+                    <Label htmlFor="motivo" className="text-xs">
+                      Motivo da cortesia — fica registrado com seu nome
+                    </Label>
+                    <Input
+                      id="motivo"
+                      value={motivoCortesia}
+                      onChange={(e) => setMotivoCortesia(e.target.value)}
+                      placeholder="Ex.: Policiais de serviço"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1"
+                        disabled={cobrando}
+                        onClick={() => cobrar("cortesia")}
+                      >
+                        {cobrando ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar cortesia"}
+                      </Button>
+                      <Button variant="ghost" onClick={() => setCortesiaAberta(false)}>Cancelar</Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Sai do estoque sem entrar no faturamento.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

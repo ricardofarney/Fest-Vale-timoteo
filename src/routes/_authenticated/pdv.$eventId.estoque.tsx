@@ -152,24 +152,26 @@ function Estoque() {
           const pouco = estoqueCritico(p);
           return (
             <Card key={p.id} className="p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="truncate font-semibold">{p.name}</div>
-                  <div className="text-sm text-muted-foreground">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold leading-tight">{p.name}</div>
+                  <div className="mt-0.5 text-sm text-muted-foreground">
                     {p.category} · {brl(p.price_cents)}
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <div className={`font-display text-2xl font-bold tabular-nums ${fora ? "text-destructive" : pouco ? "text-primary" : ""}`}>
-                      {p.stock_qty}
-                    </div>
-                    <div className="text-[11px] uppercase tracking-wide text-muted-foreground">em estoque</div>
-                  </div>
-                  <Button size="sm" variant="outline" onClick={() => { setRemessaDe(p); setQtd(""); setMotivo(""); }}>
-                    <PackagePlus className="mr-1 h-4 w-4" />Repor
-                  </Button>
-                </div>
+                <Button size="sm" variant="outline" className="shrink-0"
+                        onClick={() => { setRemessaDe(p); setQtd(""); setMotivo(""); }}>
+                  <PackagePlus className="mr-1 h-4 w-4" />Repor
+                </Button>
+              </div>
+
+              <div className="mt-3 flex items-baseline gap-2">
+                <span className={`font-display text-2xl font-bold tabular-nums ${fora ? "text-destructive" : pouco ? "text-primary" : ""}`}>
+                  {p.stock_qty}
+                </span>
+                <span className="text-xs uppercase tracking-wide text-muted-foreground">
+                  em estoque{pouco && !fora ? " · repor logo" : ""}{fora ? " · esgotado" : ""}
+                </span>
               </div>
 
               {remessaDe?.id === p.id && (
