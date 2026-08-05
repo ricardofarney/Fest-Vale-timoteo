@@ -93,6 +93,82 @@ export type Database = {
           },
         ]
       }
+      event_staff: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          event_id: string
+          id: string
+          name: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          event_id: string
+          id?: string
+          name?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          event_id?: string
+          id?: string
+          name?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_staff_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ticket_emails: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          order_id: string
+          provider_message_id: string | null
+          status: string
+          to_email: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_id: string
+          provider_message_id?: string | null
+          status?: string
+          to_email: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          order_id?: string
+          provider_message_id?: string | null
+          status?: string
+          to_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_emails_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           address: string | null
@@ -182,31 +258,49 @@ export type Database = {
       }
       orders: {
         Row: {
+          attendees: Json
+          buyer_email: string | null
           buyer_id: string
+          buyer_name: string | null
           coupon_id: string | null
           created_at: string
           event_id: string
           expires_at: string
           id: string
+          mp_payment_id: string | null
+          mp_preference_id: string | null
           paid_at: string | null
           payment_method: string | null
           status: Database["public"]["Enums"]["order_status"]
+          stock_reserved: boolean
           total_cents: number
         }
         Insert: {
+          attendees?: Json
+          buyer_email?: string | null
           buyer_id: string
+          buyer_name?: string | null
           coupon_id?: string | null
           created_at?: string
           event_id: string
           expires_at?: string
           id?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
           paid_at?: string | null
           payment_method?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stock_reserved?: boolean
           total_cents?: number
         }
         Update: {
+          attendees?: Json
+          buyer_email?: string | null
           buyer_id?: string
+          buyer_name?: string | null
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
+          stock_reserved?: boolean
           coupon_id?: string | null
           created_at?: string
           event_id?: string
@@ -423,21 +517,41 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      confirm_order_payment: {
+      confirm_order_paid_admin: {
         Args: {
-          _attendees?: Json
-          _coupon_code?: string
           _order_id: string
+          _payment_id: string
           _payment_method: string
         }
-        Returns: string
+        Returns: Json
       }
+      event_checkin_stats: { Args: { _event_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      is_event_organizer: {
+        Args: { _event_id: string; _user_id?: string }
+        Returns: boolean
+      }
+      is_event_staff: {
+        Args: { _event_id: string; _user_id?: string }
+        Returns: boolean
+      }
+      release_expired_orders: { Args: never; Returns: number }
+      reserve_order_stock: {
+        Args: {
+          _attendees?: Json
+          _buyer_email?: string
+          _buyer_name?: string
+          _coupon_code?: string
+          _hold_minutes?: number
+          _order_id: string
+        }
+        Returns: Json
       }
       validate_ticket: {
         Args: { _device_id?: string; _event_id: string; _qr_token: string }
