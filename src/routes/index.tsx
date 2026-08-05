@@ -15,6 +15,7 @@ import {
   Globe,
   Instagram,
   Music4,
+  Newspaper,
   QrCode,
   Youtube,
   ShieldCheck,
@@ -62,6 +63,7 @@ function HomePage() {
       <Atracoes />
       <Ingressos data={data} />
       <Sobre />
+      <EdicoesAnteriores />
       <Patrocinadores />
       <LocalEData />
       <Faq />
@@ -450,6 +452,96 @@ function Sobre() {
             </div>
           ))}
         </div>
+      </div>
+    </section>
+  );
+}
+
+/* --------------------------------------------- Edições anteriores */
+
+function EdicoesAnteriores() {
+  return (
+    <section id="edicoes" className="scroll-mt-20 border-y border-border/60 bg-card/30">
+      <div className="container mx-auto px-4 py-20">
+        <SectionHead
+          eyebrow="De onde viemos"
+          title="As edições anteriores"
+          subtitle="Três festas, uma mesma finalidade: sustentar as ações sociais da loja no Vale do Aço."
+        />
+
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {FEST.edicoesAnteriores.map((e) => (
+            <article
+              key={e.edicao}
+              className="flex flex-col overflow-hidden rounded-2xl border border-border/60 bg-card/50"
+            >
+              {e.fotos.length > 0 ? (
+                <div className="relative h-44 overflow-hidden">
+                  <img src={e.fotos[0]} alt={`${e.titulo} em Timóteo`} className="h-full w-full object-cover" loading="lazy" />
+                </div>
+              ) : (
+                <div className="bg-glow grid h-24 place-items-center border-b border-border/60 bg-secondary/30">
+                  <span className="font-display text-4xl font-bold text-primary/30">{e.edicao}ª</span>
+                </div>
+              )}
+
+              <div className="flex flex-1 flex-col p-6">
+                <h3 className="font-display text-xl font-bold">{e.titulo}</h3>
+                <div className="mt-1 text-sm text-muted-foreground">
+                  {e.dataLabel && <span>{e.dataLabel}</span>}
+                  {e.dataLabel && e.local && <span className="mx-1.5 text-border">|</span>}
+                  {e.local && <span>{e.local}</span>}
+                </div>
+
+                <p className="mt-4 flex-1 text-sm leading-relaxed text-muted-foreground">{e.resumo}</p>
+
+                {e.atracoes.length > 0 && (
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    {e.atracoes.map((a) => (
+                      <span
+                        key={a}
+                        className="rounded-full border border-border/70 bg-secondary/40 px-3 py-1 text-xs text-muted-foreground"
+                      >
+                        {a}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+
+        {FEST.naImprensa.length > 0 && (
+          <div className="mt-14">
+            <h3 className="text-center font-display text-xl font-semibold">O Fest Vale na imprensa</h3>
+            <div className="mx-auto mt-6 grid max-w-3xl gap-4 sm:grid-cols-2">
+              {FEST.naImprensa.map((m) => (
+                <a
+                  key={m.url}
+                  href={m.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex flex-col rounded-2xl border border-border/60 bg-card/50 p-6 transition-colors hover:border-primary/50 hover:bg-card"
+                >
+                  <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wider text-primary">
+                    <Newspaper className="h-3.5 w-3.5" />
+                    {m.veiculo}
+                    {m.dataLabel && <span className="font-normal normal-case tracking-normal text-muted-foreground">· {m.dataLabel}</span>}
+                  </div>
+                  <h4 className="mt-3 font-display text-base font-semibold leading-snug group-hover:text-primary">
+                    {m.titulo}
+                  </h4>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{m.resumo}</p>
+                  <span className="mt-4 inline-flex items-center text-sm font-medium text-primary">
+                    Ler a matéria
+                    <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   );
