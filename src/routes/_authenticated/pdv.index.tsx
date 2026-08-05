@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/format";
-import { ShoppingCart, Boxes, ScanLine, BarChart3, Calendar, FlaskConical } from "lucide-react";
+import { ShoppingCart, Boxes, ScanLine, BarChart3, Calendar, FlaskConical, Ticket } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pdv/")({
   head: () => ({ meta: [{ title: "PDV — Fest Vale Timóteo" }] }),
@@ -71,7 +71,12 @@ function PdvHome() {
             <div className="mt-5 grid gap-2 sm:grid-cols-2">
               <Button asChild size="lg" className="justify-start">
                 <Link to="/pdv/$eventId/caixa" params={{ eventId: ev.id }}>
-                  <ShoppingCart className="mr-2 h-5 w-5" />Abrir caixa
+                  <ShoppingCart className="mr-2 h-5 w-5" />Vender produtos
+                </Link>
+              </Button>
+              <Button asChild size="lg" className="justify-start">
+                <Link to="/pdv/$eventId/ingressos" params={{ eventId: ev.id }}>
+                  <Ticket className="mr-2 h-5 w-5" />Vender ingresso
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="justify-start">

@@ -16,7 +16,21 @@ export const Route = createFileRoute("/_authenticated/organizador/eventos/$id/eq
   component: EquipePage,
 });
 
-type Credencial = { email: string; senha: string | null; conta_nova: boolean };
+type Cargo = "organizador" | "caixa" | "portaria";
+type Credencial = { email: string; senha: string | null; conta_nova: boolean; cargo: Cargo };
+
+const CARGOS: { id: Cargo; nome: string; resumo: string }[] = [
+  { id: "organizador", nome: "Organizador",
+    resumo: "Tudo do evento: cadastra usuários e produtos, dá entrada em estoque, autoriza cortesia e sangria, vê os relatórios." },
+  { id: "caixa", nome: "Caixa",
+    resumo: "Vende no PDV — produtos e ingresso na portaria — e entrega no balcão. Não vê relatório nem mexe em estoque." },
+  { id: "portaria", nome: "Equipe de portaria",
+    resumo: "Só lê o QR dos ingressos na entrada." },
+];
+
+const ROTULO_CARGO: Record<Cargo, string> = {
+  organizador: "Organizador", caixa: "Caixa", portaria: "Portaria",
+};
 
 function EquipePage() {
   const { id: eventId } = Route.useParams();
@@ -24,6 +38,7 @@ function EquipePage() {
 
   const [nome, setNome] = useState("");
   const [email, setEmail] = useState("");
+  const [cargo, setCargo] = useState<Cargo>("portaria");
   const [salvando, setSalvando] = useState(false);
   const [credencial, setCredencial] = useState<Credencial | null>(null);
 
@@ -42,7 +57,7 @@ function EquipePage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_staff")
-        .select("id, name, email, created_at")
+        .select("id, name, email, cargo, created_at")
         .eq("event_id", eventId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -65,7 +80,7 @@ function EquipePage() {
 
     setSalvando(true);
     const { data, error } = await supabase.functions.invoke("equipe-criar", {
-      body: { event_id: eventId, nome: nome.trim(), email: email.trim().toLowerCase() },
+      body: { event_id: eventId, nome: nome.trim(), email: email.trim().toLowerCase(), cargo },
     });
     setSalvando(false);
 
@@ -74,7 +89,7 @@ function EquipePage() {
       return toast.error(detalhe || "Não consegui criar o acesso.");
     }
     const r = data as Credencial & { status: string };
-    setCredencial({ email: r.email, senha: r.senha, conta_nova: r.conta_nova });
+    setCredencial({ email: r.email, senha: r.senha, conta_nova: r.conta_nova, cargo: r.cargo });
     setNome("");
     setEmail("");
     qc.invalidateQueries({ queryKey: ["equipe", eventId] });
@@ -88,7 +103,7 @@ function EquipePage() {
       return toast.error(detalhe || "Não consegui gerar a senha.");
     }
     const r = data as { email: string; senha: string };
-    setCredencial({ email: r.email, senha: r.senha, conta_nova: false });
+    setCredencial({ email: r.email, senha: r.senha, conta_nova: false, cargo: "portaria" });
     toast.success("Senha nova gerada");
   };
 
@@ -105,10 +120,10 @@ function EquipePage() {
         <ArrowLeft className="mr-1 h-4 w-4" />Voltar ao painel
       </Link>
 
-      <h1 className="font-display text-3xl font-bold">Equipe de portaria</h1>
+      <h1 className="font-display text-3xl font-bold">Equipe do evento</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        {evento?.name ?? "Evento"} — quem estiver nesta lista consegue abrir o leitor de QR pelo próprio celular
-        e liberar a entrada. Não vê vendas, faturamento nem edita o evento.
+        {evento?.name ?? "Evento"} — cada pessoa entra pelo próprio celular e enxerga apenas o que o
+        cargo dela permite.
       </p>
 
       {/* --------------------------------------------- Credencial gerada */}
@@ -153,11 +168,13 @@ function EquipePage() {
               className="w-full"
               onClick={() =>
                 copiar(
-                  `Acesso à portaria do ${evento?.name ?? "evento"}\n` +
+                  `Acesso ao ${evento?.name ?? "evento"} — ${ROTULO_CARGO[credencial.cargo]}\n` +
                   `Site: ${typeof window !== "undefined" ? window.location.origin : ""}/login\n` +
                   `E-mail: ${credencial.email}\n` +
                   (credencial.senha ? `Senha: ${credencial.senha}\n` : "") +
-                  `Depois de entrar, abra o menu e toque em "Validação na entrada".`,
+                  (credencial.cargo === "portaria"
+                    ? `Depois de entrar, abra o menu e toque em "Validação na entrada".`
+                    : `Depois de entrar, abra o menu e toque em "PDV do evento".`),
                 )
               }
             >
@@ -180,7 +197,7 @@ function EquipePage() {
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="eq-nome">Nome</Label>
-            <Input id="eq-nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome de quem vai validar" />
+            <Input id="eq-nome" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da pessoa" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="eq-email">E-mail</Label>
@@ -194,6 +211,27 @@ function EquipePage() {
             />
           </div>
         </div>
+        <div className="mt-4">
+          <Label className="mb-2 block">Nível de acesso</Label>
+          <div className="grid gap-2">
+            {CARGOS.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setCargo(c.id)}
+                className={`rounded-xl border p-3 text-left transition-colors ${
+                  cargo === c.id
+                    ? "border-primary bg-primary/10"
+                    : "border-border/70 hover:bg-secondary/40"
+                }`}
+              >
+                <div className="font-semibold">{c.nome}</div>
+                <div className="mt-0.5 text-sm text-muted-foreground">{c.resumo}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
         <Button className="mt-4" onClick={criar} disabled={salvando}>
           {salvando ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Criando...</> : <><UserPlus className="mr-2 h-4 w-4" />Criar acesso</>}
         </Button>
@@ -202,7 +240,7 @@ function EquipePage() {
       {/* ------------------------------------------------------- A lista */}
       <div className="mt-8">
         <h2 className="font-display text-lg font-semibold">
-          Na portaria {equipe?.length ? <span className="text-muted-foreground">({equipe.length})</span> : null}
+          Na equipe {equipe?.length ? <span className="text-muted-foreground">({equipe.length})</span> : null}
         </h2>
 
         <div className="mt-3 space-y-3">
@@ -220,7 +258,12 @@ function EquipePage() {
           {equipe?.map((m) => (
             <Card key={m.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <div className="truncate font-semibold">{m.name}</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="truncate font-semibold">{m.name}</span>
+                  <span className="shrink-0 rounded-full border border-border/70 bg-secondary/50 px-2 py-0.5 text-[11px] uppercase tracking-wide text-muted-foreground">
+                    {ROTULO_CARGO[(m.cargo ?? "portaria") as Cargo]}
+                  </span>
+                </div>
                 <div className="truncate text-sm text-muted-foreground">{m.email}</div>
               </div>
               <div className="flex shrink-0 gap-2">
@@ -242,10 +285,10 @@ function EquipePage() {
         </h3>
         <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
           <li>1. A pessoa entra no site pelo celular com o e-mail e a senha que você entregou.</li>
-          <li>2. No menu da conta, toca em <span className="text-foreground">Validação na entrada</span> e escolhe o evento.</li>
-          <li>3. Toca em <span className="text-foreground">Abrir scanner</span> e autoriza o uso da câmera — só na primeira vez.</li>
-          <li>4. Aponta para o QR do ingresso. A tela responde em verde (liberado), amarelo (já usado) ou vermelho (inválido).</li>
-          <li>5. Se a internet cair, as leituras ficam salvas no aparelho e sobem sozinhas quando a conexão voltar.</li>
+          <li>2. No menu da conta, a <span className="text-foreground">portaria</span> toca em "Validação na entrada"; o <span className="text-foreground">caixa</span> toca em "PDV do evento".</li>
+          <li>3. Na primeira leitura, o navegador pede permissão para usar a câmera — é só autorizar uma vez.</li>
+          <li>4. Ao ler o QR, a tela responde em verde (liberado), amarelo (já usado) ou vermelho (inválido).</li>
+          <li>5. Se a internet cair, as leituras da portaria ficam salvas no aparelho e sobem sozinhas quando a conexão voltar.</li>
         </ol>
       </Card>
     </div>

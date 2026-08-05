@@ -1,10 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { brl } from "@/lib/format";
-import { ArrowLeft, RefreshCw, AlertTriangle, Gift, Boxes } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { brl, fmtDateTime } from "@/lib/format";
+import { toast } from "sonner";
+import { ArrowLeft, RefreshCw, AlertTriangle, Gift, Boxes, Banknote, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pdv/$eventId/relatorio")({
   head: () => ({ meta: [{ title: "Relatório do PDV — Fest Vale Timóteo" }] }),
@@ -31,6 +35,12 @@ const ROTULO: Record<string, string> = {
 
 function Relatorio() {
   const { eventId } = Route.useParams();
+  const qc = useQueryClient();
+
+  const [valor, setValor] = useState("");
+  const [motivo, setMotivo] = useState("");
+  const [posto, setPosto] = useState("");
+  const [registrando, setRegistrando] = useState(false);
 
   const { data, isFetching, refetch } = useQuery({
     queryKey: ["pdv-relatorio", eventId],
@@ -41,6 +51,52 @@ function Relatorio() {
     },
     refetchInterval: 15_000,
   });
+
+  const { data: podeGerenciar } = useQuery({
+    queryKey: ["pdv-pode-gerenciar", eventId],
+    queryFn: async () => {
+      const { data } = await supabase.rpc("pode_gerenciar_evento", { _event_id: eventId });
+      return data === true;
+    },
+  });
+
+  const { data: sangrias } = useQuery({
+    queryKey: ["pdv-sangrias", eventId],
+    enabled: podeGerenciar === true,
+    refetchInterval: 30_000,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cash_movements")
+        .select("id, amount_cents, reason, station, created_at")
+        .eq("event_id", eventId)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const registrarSangria = async () => {
+    const reais = parseFloat(valor.replace(".", "").replace(",", "."));
+    if (!reais || reais <= 0) return toast.error("Informe o valor retirado");
+    if (motivo.trim().length < 3) return toast.error("Informe o motivo");
+
+    setRegistrando(true);
+    const { error } = await supabase.rpc("pos_sangria", {
+      _event_id: eventId,
+      _amount_cents: -Math.round(reais * 100),
+      _reason: motivo.trim(),
+      _station: posto.trim() || undefined,
+    });
+    setRegistrando(false);
+
+    if (error) return toast.error(error.message);
+    toast.success(`Sangria de ${brl(Math.round(reais * 100))} registrada`);
+    setValor(""); setMotivo(""); setPosto("");
+    qc.invalidateQueries({ queryKey: ["pdv-sangrias", eventId] });
+  };
+
+  const totalSangrado = (sangrias ?? []).reduce((s, m) => s + Math.abs(m.amount_cents), 0);
 
   const criticos = (data?.produtos ?? []).filter(
     (p) => p.controla_estoque && (p.stock_qty <= 0 || (p.stock_alert > 0 && p.stock_qty <= p.stock_alert)),
@@ -169,8 +225,66 @@ function Relatorio() {
       </Card>
 
       <p className="mt-6 text-xs text-muted-foreground">
-        O valor em dinheiro é o que deve estar na gaveta de cada caixa no fechamento.
+        O valor em dinheiro é o que deve estar na gaveta de cada caixa no fechamento, descontadas as
+        sangrias já retiradas.
       </p>
+
+      {podeGerenciar && (
+        <>
+          <h2 className="mt-8 flex items-center gap-2 font-display text-lg font-semibold">
+            <Banknote className="h-4 w-4" />Sangria de caixa
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Dinheiro retirado da gaveta durante o evento. Fica registrado com seu nome e sai do saldo
+            esperado daquele caixa.
+          </p>
+
+          <Card className="mt-3 p-5">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="sg-valor">Valor retirado (R$)</Label>
+                <Input id="sg-valor" inputMode="decimal" placeholder="500,00" value={valor}
+                       onChange={(e) => setValor(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sg-posto">Caixa</Label>
+                <Input id="sg-posto" placeholder="Caixa 1" value={posto}
+                       onChange={(e) => setPosto(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sg-motivo">Motivo</Label>
+                <Input id="sg-motivo" placeholder="Levado para o cofre" value={motivo}
+                       onChange={(e) => setMotivo(e.target.value)} />
+              </div>
+            </div>
+            <Button className="mt-4" onClick={registrarSangria} disabled={registrando}>
+              {registrando ? <Loader2 className="h-4 w-4 animate-spin" /> : "Registrar sangria"}
+            </Button>
+          </Card>
+
+          {(sangrias?.length ?? 0) > 0 && (
+            <Card className="mt-3 divide-y divide-border/60">
+              <div className="flex items-center justify-between p-4">
+                <span className="text-sm text-muted-foreground">Total retirado</span>
+                <span className="font-display text-xl font-bold tabular-nums">{brl(totalSangrado)}</span>
+              </div>
+              {sangrias!.map((m) => (
+                <div key={m.id} className="flex flex-wrap items-center justify-between gap-2 p-4">
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{m.reason}</div>
+                    <div className="truncate text-xs text-muted-foreground">
+                      {m.station ?? "sem caixa"} · {fmtDateTime(m.created_at)}
+                    </div>
+                  </div>
+                  <span className="font-display text-lg font-bold tabular-nums">
+                    {brl(Math.abs(m.amount_cents))}
+                  </span>
+                </div>
+              ))}
+            </Card>
+          )}
+        </>
+      )}
     </div>
   );
 }
