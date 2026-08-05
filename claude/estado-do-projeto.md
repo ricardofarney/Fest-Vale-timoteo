@@ -5,7 +5,7 @@ Cowork consiga retomar de onde parou. **Regra do projeto: ao finalizar uma
 tarefa, registrar aqui o que foi feito, como foi verificado e o que ficou
 pendente.**
 
-Última atualização: 05/08/2026.
+Última atualização: 05/08/2026 — último commit registrado: `a7fa209`.
 
 ---
 
@@ -95,8 +95,33 @@ títulos novos. Não sobrou nenhuma ocorrência de "Palco" como nome de produto
 no código (o texto "Quem sobe ao palco" em `src/routes/index.tsx` é conteúdo
 editorial legítimo e foi mantido).
 
+### 05/08/2026 — Arte de prévia de link e foto da banda (`8fc2083`)
+
+Commit feito pelo próprio Ricardo, fora destas sessões: arte da prévia de link
+(OG image) e foto da banda Gertrudes.
+
+### 05/08/2026 — Login com Google escondido (`a7fa209`)
+
+O provedor Google não está configurado no Supabase (Authentication > Providers),
+então o botão aparecia nas telas de login e cadastro e falhava ao ser clicado.
+
+- `src/lib/fest.ts`: nova flag `googleHabilitado: false` dentro de `FEST`, logo
+  depois de `dominio`, com comentário explicando quando ativar.
+- `src/routes/login.tsx` e `src/routes/cadastro.tsx`: importam `FEST` e envolvem
+  o botão do Google mais o separador "ou" em `{FEST.googleHabilitado && (<>...</>)}`.
+- `handleGoogle` foi **mantido** nos dois arquivos — volta a ser usado assim que
+  o provedor for ativado. Basta trocar a flag para `true`.
+
+Verificação: `npx tsc --noEmit` e `npx vite build` passaram (exit 0), e o HTML
+pré-renderizado de `/login` e `/cadastro` não contém mais o botão.
+
+Nota: a mensagem deste commit menciona os títulos das páginas por pedido do
+Ricardo, mas essa parte já tinha sido feita antes, no commit `54116b7`.
+
 ## 6. Pendências e pontos de atenção
 
+- **Login com Google está desligado.** Para reativar: configurar o provedor no
+  painel do Supabase e trocar `googleHabilitado` para `true` em `src/lib/fest.ts`.
 - `package-lock.json` está com a reescrita do npm 11 no working tree local, não
   commitada. Decidir se descarta (`git restore package-lock.json`) ou se atualiza
   o lock de propósito.
