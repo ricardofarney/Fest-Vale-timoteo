@@ -88,7 +88,7 @@ export const FEST = {
   atracoes: [
     {
       nome: "Gertrudes",
-      papel: "Atração principal",
+      papel: "1ª banda confirmada",
       descricao:
         "Nome tradicional do Vale do Aço, a Gertrudes construiu sua reputação tocando clássicos do rock com execução precisa — e é ela que fecha a noite do Fest Vale.",
       bio: [
@@ -136,6 +136,66 @@ export const FEST = {
     redes?: ReadonlyArray<{ tipo: "instagram" | "youtube" | "spotify" | "site"; url: string; label: string }>;
     videoId?: string;
   }>,
+
+  /**
+   * Edições anteriores. `fotos` aceita caminhos locais (ex.: "/img/edicoes/2026-01.jpg").
+   * Enquanto estiver vazio, o site mostra só o resumo em texto — nenhuma imagem quebrada.
+   */
+  edicoesAnteriores: [
+    {
+      edicao: 3,
+      titulo: "3º Fest Vale",
+      dataLabel: "9 de maio de 2026",
+      local: "Área de Lazer Joaquim Augusto — bairro Santa Maria",
+      resumo:
+        "Três bandas no palco e a área de lazer cheia: a edição de 2026 teve Gertrudes, Polivalência e IA JOE, com ingressos a R$ 25 no segundo lote e venda também em pontos físicos espalhados pela cidade.",
+      atracoes: ["Gertrudes", "Polivalência", "IA JOE"],
+      fotos: [] as string[],
+    },
+    {
+      edicao: 2,
+      titulo: "2º Fest Vale",
+      dataLabel: "",
+      local: "Timóteo, MG",
+      resumo:
+        "A segunda edição consolidou o formato: música ao vivo, praça de alimentação e a renda inteira revertida para as ações sociais da loja.",
+      atracoes: [] as string[],
+      fotos: [] as string[],
+    },
+    {
+      edicao: 1,
+      titulo: "1º Fest Vale",
+      dataLabel: "",
+      local: "Timóteo, MG",
+      resumo:
+        "A festa nasceu como um encontro da comunidade em torno de uma causa — e desde a estreia toda a arrecadação sustenta os projetos sociais mantidos pela loja no Vale do Aço.",
+      atracoes: [] as string[],
+      fotos: [] as string[],
+    },
+  ],
+
+  /**
+   * Matérias publicadas sobre o evento. Preferência para o Só Aqui Notícias,
+   * parceiro de imprensa do Fest Vale.
+   */
+  naImprensa: [
+    {
+      veiculo: "Só Aqui Notícias",
+      titulo: "3º Fest Vale já tem data marcada e promete agitar Timóteo",
+      resumo:
+        "O anúncio da edição de 2026, com Gertrudes e Polivalência confirmadas e a organização a cargo da Loja Maçônica Acácia de Acesita e da Fraternidade Feminina Cruzeiro do Sul.",
+      url: "https://soaquinoticias.com.br/3o-fest-vale-ja-tem-data-marcada-e-promete-agitar-timoteo/",
+      dataLabel: "abril de 2026",
+    },
+    {
+      veiculo: "Só Aqui Notícias",
+      titulo: "3º Fest Vale movimenta Timóteo neste sábado (09/05)",
+      resumo:
+        "A cobertura da véspera, com o line-up completo, os pontos de venda de ingressos e a destinação da renda para ações filantrópicas.",
+      url: "https://soaquinoticias.com.br/3o-fest-vale-movimenta-timoteo-neste-sabado-09-05/",
+      dataLabel: "maio de 2026",
+    },
+  ],
 
   /** Usados enquanto o evento ainda não foi cadastrado no painel do organizador. */
   lotesExemplo: [
