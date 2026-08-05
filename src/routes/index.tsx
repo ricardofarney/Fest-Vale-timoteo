@@ -12,8 +12,11 @@ import {
   HeartHandshake,
   MapPin,
   Handshake,
+  Globe,
+  Instagram,
   Music4,
   QrCode,
+  Youtube,
   ShieldCheck,
   Ticket,
 } from "lucide-react";
@@ -170,6 +173,18 @@ function Hero() {
             <span className="font-medium text-foreground">{FEST.realizador.nome}</span>
           </p>
         </div>
+
+        {FEST.imagens.heroBanda && (
+          <div className="relative mx-auto mt-12 max-w-3xl md:mt-16">
+            <img
+              src={FEST.imagens.heroBanda}
+              alt={FEST.imagens.heroBandaLegenda}
+              className="mx-auto w-full drop-shadow-[0_25px_45px_rgba(0,0,0,0.55)]"
+              width={1400}
+              height={933}
+            />
+          </div>
+        )}
       </div>
     </section>
   );
@@ -192,22 +207,100 @@ function Atracoes() {
           .map((a) => (
             <article
               key={a.nome}
-              className="overflow-hidden rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/10 to-card md:grid md:grid-cols-2 md:items-stretch"
+              className="overflow-hidden rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/10 to-card"
             >
-              <div className="relative h-60 overflow-hidden md:h-full md:min-h-[340px]">
-                {a.imagem ? (
-                  <img src={a.imagem} alt={a.nome} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="bg-glow grid h-full w-full place-items-center bg-secondary/40">
-                    <Music4 className="h-16 w-16 text-primary/40" />
+              <div className="md:grid md:grid-cols-2 md:items-stretch">
+                <div className="relative h-64 overflow-hidden sm:h-80 md:h-full md:min-h-[420px]">
+                  {a.imagem ? (
+                    <img
+                      src={a.imagem}
+                      alt={`Banda ${a.nome}`}
+                      className="h-full w-full object-contain object-bottom p-4 md:p-6"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="bg-glow grid h-full w-full place-items-center bg-secondary/40">
+                      <Music4 className="h-16 w-16 text-primary/40" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col justify-center p-8 md:p-10">
+                  <div className="text-xs font-medium uppercase tracking-wider text-primary">{a.papel}</div>
+                  <h3 className="mt-2 font-display text-4xl font-bold md:text-5xl">{a.nome}</h3>
+
+                  {a.tags && a.tags.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {a.tags.map((t) => (
+                        <span
+                          key={t}
+                          className="rounded-full border border-border/70 bg-secondary/40 px-3 py-1 text-xs text-muted-foreground"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="mt-5 leading-relaxed text-muted-foreground">{a.descricao}</p>
+
+                  {a.bio?.map((p) => (
+                    <p key={p.slice(0, 24)} className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                      {p}
+                    </p>
+                  ))}
+
+                  {a.integrantes && a.integrantes.length > 0 && (
+                    <div className="mt-6">
+                      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                        Integrantes
+                      </div>
+                      <ul className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
+                        {a.integrantes.map((m) => (
+                          <li key={m} className="flex items-start gap-2">
+                            <Music4 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70" />
+                            <span>{m}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {a.redes && a.redes.length > 0 && (
+                    <div className="mt-6 flex flex-wrap gap-3">
+                      {a.redes.map((r) => (
+                        <Button key={r.url} variant="outline" size="sm" asChild>
+                          <a href={r.url} target="_blank" rel="noopener noreferrer">
+                            {r.tipo === "instagram" && <Instagram className="mr-2 h-4 w-4" />}
+                            {r.tipo === "youtube" && <Youtube className="mr-2 h-4 w-4" />}
+                            {r.tipo === "spotify" && <Music4 className="mr-2 h-4 w-4" />}
+                            {r.tipo === "site" && <Globe className="mr-2 h-4 w-4" />}
+                            {r.label}
+                          </a>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {a.videoId && (
+                <div className="border-t border-border/60 p-6 md:p-10 md:pt-8">
+                  <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                    Ouça a banda
                   </div>
-                )}
-              </div>
-              <div className="flex flex-col justify-center p-8 md:p-10">
-                <div className="text-xs font-medium uppercase tracking-wider text-primary">{a.papel}</div>
-                <h3 className="mt-2 font-display text-4xl font-bold md:text-5xl">{a.nome}</h3>
-                <p className="mt-4 leading-relaxed text-muted-foreground">{a.descricao}</p>
-              </div>
+                  <div className="mt-3 aspect-video w-full max-w-2xl overflow-hidden rounded-xl border border-border/60 bg-black">
+                    <iframe
+                      className="h-full w-full"
+                      src={`https://www.youtube-nocookie.com/embed/${a.videoId}`}
+                      title={`Vídeo da banda ${a.nome}`}
+                      loading="lazy"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+              )}
             </article>
           ))}
 

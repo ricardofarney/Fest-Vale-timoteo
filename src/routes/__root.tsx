@@ -11,7 +11,7 @@ import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { SiteHeader } from "@/components/site-header";
-import { FEST } from "@/lib/fest";
+import { FEST, absUrl } from "@/lib/fest";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -72,13 +72,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: FEST_DESC },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "pt_BR" },
-      { property: "og:image", content: FEST.imagens.ogImage },
+      { property: "og:site_name", content: `${FEST.nome} ${FEST.cidade}` },
+      { property: "og:url", content: FEST.urlBase },
+      // A prévia de link (WhatsApp, Facebook, Instagram) só aceita URL absoluta.
+      { property: "og:image", content: absUrl(FEST.imagens.ogImage) },
+      { property: "og:image:secure_url", content: absUrl(FEST.imagens.ogImage) },
+      { property: "og:image:type", content: "image/jpeg" },
+      { property: "og:image:width", content: String(FEST.imagens.ogImageLargura) },
+      { property: "og:image:height", content: String(FEST.imagens.ogImageAltura) },
+      { property: "og:image:alt", content: FEST.imagens.ogImageAlt },
       { name: "twitter:title", content: FEST_TITLE },
       { name: "twitter:description", content: FEST_DESC },
-      { name: "twitter:image", content: FEST.imagens.ogImage },
+      { name: "twitter:image", content: absUrl(FEST.imagens.ogImage) },
+      { name: "twitter:image:alt", content: FEST.imagens.ogImageAlt },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "canonical", href: FEST.urlBase },
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: FEST.imagens.logo || "/favicon.ico" },
       { rel: "apple-touch-icon", href: FEST.imagens.logo || "/favicon.ico" },
