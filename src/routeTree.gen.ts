@@ -23,6 +23,7 @@ import { Route as AuthenticatedOrganizadorEventosNovoRouteImport } from './route
 import { Route as AuthenticatedValidacaoEventIdScannerRouteImport } from './routes/_authenticated/validacao.$eventId.scanner'
 import { Route as AuthenticatedOrganizadorEventosIdDashboardRouteImport } from './routes/_authenticated/organizador.eventos.$id.dashboard'
 import { Route as AuthenticatedOrganizadorEventosIdEditarRouteImport } from './routes/_authenticated/organizador.eventos.$id.editar'
+import { Route as AuthenticatedOrganizadorEventosIdEquipeRouteImport } from './routes/_authenticated/organizador.eventos.$id.equipe'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -101,6 +102,12 @@ const AuthenticatedOrganizadorEventosIdEditarRoute =
     path: '/eventos/$id/editar',
     getParentRoute: () => AuthenticatedOrganizadorRoute,
   } as any)
+const AuthenticatedOrganizadorEventosIdEquipeRoute =
+  AuthenticatedOrganizadorEventosIdEquipeRouteImport.update({
+    id: '/eventos/$id/equipe',
+    path: '/eventos/$id/equipe',
+    getParentRoute: () => AuthenticatedOrganizadorRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
   '/organizador/eventos/$id/dashboard': typeof AuthenticatedOrganizadorEventosIdDashboardRoute
   '/organizador/eventos/$id/editar': typeof AuthenticatedOrganizadorEventosIdEditarRoute
+  '/organizador/eventos/$id/equipe': typeof AuthenticatedOrganizadorEventosIdEquipeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -130,6 +138,7 @@ export interface FileRoutesByTo {
   '/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
   '/organizador/eventos/$id/dashboard': typeof AuthenticatedOrganizadorEventosIdDashboardRoute
   '/organizador/eventos/$id/editar': typeof AuthenticatedOrganizadorEventosIdEditarRoute
+  '/organizador/eventos/$id/equipe': typeof AuthenticatedOrganizadorEventosIdEquipeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -147,6 +156,7 @@ export interface FileRoutesById {
   '/_authenticated/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
   '/_authenticated/organizador/eventos/$id/dashboard': typeof AuthenticatedOrganizadorEventosIdDashboardRoute
   '/_authenticated/organizador/eventos/$id/editar': typeof AuthenticatedOrganizadorEventosIdEditarRoute
+  '/_authenticated/organizador/eventos/$id/equipe': typeof AuthenticatedOrganizadorEventosIdEquipeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/validacao/$eventId/scanner'
     | '/organizador/eventos/$id/dashboard'
     | '/organizador/eventos/$id/editar'
+    | '/organizador/eventos/$id/equipe'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/validacao/$eventId/scanner'
     | '/organizador/eventos/$id/dashboard'
     | '/organizador/eventos/$id/editar'
+    | '/organizador/eventos/$id/equipe'
   id:
     | '__root__'
     | '/'
@@ -194,6 +206,7 @@ export interface FileRouteTypes {
     | '/_authenticated/validacao/$eventId/scanner'
     | '/_authenticated/organizador/eventos/$id/dashboard'
     | '/_authenticated/organizador/eventos/$id/editar'
+    | '/_authenticated/organizador/eventos/$id/equipe'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrganizadorEventosIdEditarRouteImport
       parentRoute: typeof AuthenticatedOrganizadorRoute
     }
+    '/_authenticated/organizador/eventos/$id/equipe': {
+      id: '/_authenticated/organizador/eventos/$id/equipe'
+      path: '/eventos/$id/equipe'
+      fullPath: '/organizador/eventos/$id/equipe'
+      preLoaderRoute: typeof AuthenticatedOrganizadorEventosIdEquipeRouteImport
+      parentRoute: typeof AuthenticatedOrganizadorRoute
+    }
   }
 }
 
@@ -313,6 +333,7 @@ interface AuthenticatedOrganizadorRouteChildren {
   AuthenticatedOrganizadorEventosNovoRoute: typeof AuthenticatedOrganizadorEventosNovoRoute
   AuthenticatedOrganizadorEventosIdDashboardRoute: typeof AuthenticatedOrganizadorEventosIdDashboardRoute
   AuthenticatedOrganizadorEventosIdEditarRoute: typeof AuthenticatedOrganizadorEventosIdEditarRoute
+  AuthenticatedOrganizadorEventosIdEquipeRoute: typeof AuthenticatedOrganizadorEventosIdEquipeRoute
 }
 
 const AuthenticatedOrganizadorRouteChildren: AuthenticatedOrganizadorRouteChildren =
@@ -324,6 +345,8 @@ const AuthenticatedOrganizadorRouteChildren: AuthenticatedOrganizadorRouteChildr
       AuthenticatedOrganizadorEventosIdDashboardRoute,
     AuthenticatedOrganizadorEventosIdEditarRoute:
       AuthenticatedOrganizadorEventosIdEditarRoute,
+    AuthenticatedOrganizadorEventosIdEquipeRoute:
+      AuthenticatedOrganizadorEventosIdEquipeRoute,
   }
 
 const AuthenticatedOrganizadorRouteWithChildren =
