@@ -17,13 +17,30 @@ function MyEvents() {
     queryKey: ["organizer-events", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("id, slug, name, status, starts_at, cover_url, venue")
-        .eq("organizer_id", user!.id)
-        .order("starts_at", { ascending: false });
-      if (error) throw error;
-      return data;
+      // Eventos próprios + eventos em que a pessoa tem cargo de organizador.
+      // Sem a segunda consulta, um organizador convidado abre o painel vazio.
+      const campos = "id, slug, name, status, starts_at, cover_url, venue";
+      const [proprios, equipe] = await Promise.all([
+        supabase.from("events").select(campos).eq("organizer_id", user!.id),
+        supabase
+          .from("event_staff")
+          .select(`events(${campos})`)
+          .eq("user_id", user!.id)
+          .eq("cargo", "organizador"),
+      ]);
+      if (proprios.error) throw proprios.error;
+
+      type Ev = {
+        id: string; slug: string; name: string; status: string;
+        starts_at: string; cover_url: string | null; venue: string | null;
+      };
+      const porId = new Map<string, Ev>();
+      for (const ev of (proprios.data ?? []) as Ev[]) porId.set(ev.id, ev);
+      for (const linha of equipe.data ?? []) {
+        const ev = (linha as unknown as { events: Ev | null }).events;
+        if (ev) porId.set(ev.id, ev);
+      }
+      return [...porId.values()].sort((a, b) => b.starts_at.localeCompare(a.starts_at));
     },
   });
 
