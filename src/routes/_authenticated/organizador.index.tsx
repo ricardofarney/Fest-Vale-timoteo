@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { fmtDateTime } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
-import { Calendar, Edit, BarChart3, Plus } from "lucide-react";
+import { Calendar, Edit, BarChart3, Plus, Users } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/organizador/")({
   component: MyEvents,
@@ -60,9 +60,12 @@ function MyEvents() {
             <h3 className="mt-1 truncate font-display text-lg font-semibold">{ev.name}</h3>
             <p className="text-sm text-muted-foreground">{fmtDateTime(ev.starts_at)}{ev.venue ? ` • ${ev.venue}` : ""}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button asChild size="sm" variant="outline">
               <Link to="/organizador/eventos/$id/dashboard" params={{ id: ev.id }}><BarChart3 className="mr-1 h-4 w-4" />Dashboard</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/organizador/eventos/$id/equipe" params={{ id: ev.id }}><Users className="mr-1 h-4 w-4" />Equipe</Link>
             </Button>
             <Button asChild size="sm">
               <Link to="/organizador/eventos/$id/editar" params={{ id: ev.id }}><Edit className="mr-1 h-4 w-4" />Editar</Link>

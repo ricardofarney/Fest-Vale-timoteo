@@ -18,13 +18,27 @@ function ValidationHome() {
     queryKey: ["validation-events", user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("events")
-        .select("id, name, slug, starts_at, venue, status")
-        .eq("organizer_id", user!.id)
-        .order("starts_at", { ascending: true });
-      if (error) throw error;
-      return data;
+      // Eventos próprios (organizador) + eventos em que a pessoa é da portaria
+      const [proprios, equipe] = await Promise.all([
+        supabase
+          .from("events")
+          .select("id, name, slug, starts_at, venue, status")
+          .eq("organizer_id", user!.id),
+        supabase
+          .from("event_staff")
+          .select("events(id, name, slug, starts_at, venue, status)")
+          .eq("user_id", user!.id),
+      ]);
+      if (proprios.error) throw proprios.error;
+
+      type Ev = { id: string; name: string; slug: string; starts_at: string; venue: string | null; status: string };
+      const porId = new Map<string, Ev>();
+      for (const ev of (proprios.data ?? []) as Ev[]) porId.set(ev.id, ev);
+      for (const linha of equipe.data ?? []) {
+        const ev = (linha as { events: Ev | null }).events;
+        if (ev) porId.set(ev.id, ev);
+      }
+      return [...porId.values()].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
     },
   });
 
@@ -32,8 +46,8 @@ function ValidationHome() {
     <div className="container mx-auto max-w-3xl px-4 py-10">
       <h1 className="font-display text-3xl font-bold">Validação na entrada</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Escolha um evento para abrir o leitor de QR. Funciona mesmo offline: as validações são sincronizadas
-        automaticamente quando a conexão volta.
+        Escolha um evento para abrir o leitor de QR pela câmera do celular. Funciona mesmo offline: as validações
+        são sincronizadas automaticamente quando a conexão volta.
       </p>
 
       <div className="mt-8 space-y-3">
