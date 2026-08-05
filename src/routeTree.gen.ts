@@ -18,8 +18,13 @@ import { Route as AuthenticatedOrganizadorRouteImport } from './routes/_authenti
 import { Route as CheckoutOrderIdRouteImport } from './routes/checkout.$orderId'
 import { Route as EventosSlugRouteImport } from './routes/eventos.$slug'
 import { Route as AuthenticatedOrganizadorIndexRouteImport } from './routes/_authenticated/organizador.index'
+import { Route as AuthenticatedPdvIndexRouteImport } from './routes/_authenticated/pdv.index'
 import { Route as AuthenticatedValidacaoIndexRouteImport } from './routes/_authenticated/validacao.index'
 import { Route as AuthenticatedOrganizadorEventosNovoRouteImport } from './routes/_authenticated/organizador.eventos.novo'
+import { Route as AuthenticatedPdvEventIdCaixaRouteImport } from './routes/_authenticated/pdv.$eventId.caixa'
+import { Route as AuthenticatedPdvEventIdEstoqueRouteImport } from './routes/_authenticated/pdv.$eventId.estoque'
+import { Route as AuthenticatedPdvEventIdRelatorioRouteImport } from './routes/_authenticated/pdv.$eventId.relatorio'
+import { Route as AuthenticatedPdvEventIdRetiradaRouteImport } from './routes/_authenticated/pdv.$eventId.retirada'
 import { Route as AuthenticatedValidacaoEventIdScannerRouteImport } from './routes/_authenticated/validacao.$eventId.scanner'
 import { Route as AuthenticatedOrganizadorEventosIdDashboardRouteImport } from './routes/_authenticated/organizador.eventos.$id.dashboard'
 import { Route as AuthenticatedOrganizadorEventosIdEditarRouteImport } from './routes/_authenticated/organizador.eventos.$id.editar'
@@ -72,6 +77,11 @@ const AuthenticatedOrganizadorIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedOrganizadorRoute,
   } as any)
+const AuthenticatedPdvIndexRoute = AuthenticatedPdvIndexRouteImport.update({
+  id: '/pdv/',
+  path: '/pdv/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedValidacaoIndexRoute =
   AuthenticatedValidacaoIndexRouteImport.update({
     id: '/validacao/',
@@ -83,6 +93,30 @@ const AuthenticatedOrganizadorEventosNovoRoute =
     id: '/eventos/novo',
     path: '/eventos/novo',
     getParentRoute: () => AuthenticatedOrganizadorRoute,
+  } as any)
+const AuthenticatedPdvEventIdCaixaRoute =
+  AuthenticatedPdvEventIdCaixaRouteImport.update({
+    id: '/pdv/$eventId/caixa',
+    path: '/pdv/$eventId/caixa',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPdvEventIdEstoqueRoute =
+  AuthenticatedPdvEventIdEstoqueRouteImport.update({
+    id: '/pdv/$eventId/estoque',
+    path: '/pdv/$eventId/estoque',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPdvEventIdRelatorioRoute =
+  AuthenticatedPdvEventIdRelatorioRouteImport.update({
+    id: '/pdv/$eventId/relatorio',
+    path: '/pdv/$eventId/relatorio',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPdvEventIdRetiradaRoute =
+  AuthenticatedPdvEventIdRetiradaRouteImport.update({
+    id: '/pdv/$eventId/retirada',
+    path: '/pdv/$eventId/retirada',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedValidacaoEventIdScannerRoute =
   AuthenticatedValidacaoEventIdScannerRouteImport.update({
@@ -118,8 +152,13 @@ export interface FileRoutesByFullPath {
   '/checkout/$orderId': typeof CheckoutOrderIdRoute
   '/eventos/$slug': typeof EventosSlugRoute
   '/organizador/': typeof AuthenticatedOrganizadorIndexRoute
+  '/pdv/': typeof AuthenticatedPdvIndexRoute
   '/validacao/': typeof AuthenticatedValidacaoIndexRoute
   '/organizador/eventos/novo': typeof AuthenticatedOrganizadorEventosNovoRoute
+  '/pdv/$eventId/caixa': typeof AuthenticatedPdvEventIdCaixaRoute
+  '/pdv/$eventId/estoque': typeof AuthenticatedPdvEventIdEstoqueRoute
+  '/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
+  '/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
   '/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
   '/organizador/eventos/$id/dashboard': typeof AuthenticatedOrganizadorEventosIdDashboardRoute
   '/organizador/eventos/$id/editar': typeof AuthenticatedOrganizadorEventosIdEditarRoute
@@ -133,8 +172,13 @@ export interface FileRoutesByTo {
   '/checkout/$orderId': typeof CheckoutOrderIdRoute
   '/eventos/$slug': typeof EventosSlugRoute
   '/organizador': typeof AuthenticatedOrganizadorIndexRoute
+  '/pdv': typeof AuthenticatedPdvIndexRoute
   '/validacao': typeof AuthenticatedValidacaoIndexRoute
   '/organizador/eventos/novo': typeof AuthenticatedOrganizadorEventosNovoRoute
+  '/pdv/$eventId/caixa': typeof AuthenticatedPdvEventIdCaixaRoute
+  '/pdv/$eventId/estoque': typeof AuthenticatedPdvEventIdEstoqueRoute
+  '/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
+  '/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
   '/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
   '/organizador/eventos/$id/dashboard': typeof AuthenticatedOrganizadorEventosIdDashboardRoute
   '/organizador/eventos/$id/editar': typeof AuthenticatedOrganizadorEventosIdEditarRoute
@@ -151,8 +195,13 @@ export interface FileRoutesById {
   '/checkout/$orderId': typeof CheckoutOrderIdRoute
   '/eventos/$slug': typeof EventosSlugRoute
   '/_authenticated/organizador/': typeof AuthenticatedOrganizadorIndexRoute
+  '/_authenticated/pdv/': typeof AuthenticatedPdvIndexRoute
   '/_authenticated/validacao/': typeof AuthenticatedValidacaoIndexRoute
   '/_authenticated/organizador/eventos/novo': typeof AuthenticatedOrganizadorEventosNovoRoute
+  '/_authenticated/pdv/$eventId/caixa': typeof AuthenticatedPdvEventIdCaixaRoute
+  '/_authenticated/pdv/$eventId/estoque': typeof AuthenticatedPdvEventIdEstoqueRoute
+  '/_authenticated/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
+  '/_authenticated/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
   '/_authenticated/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
   '/_authenticated/organizador/eventos/$id/dashboard': typeof AuthenticatedOrganizadorEventosIdDashboardRoute
   '/_authenticated/organizador/eventos/$id/editar': typeof AuthenticatedOrganizadorEventosIdEditarRoute
@@ -169,8 +218,13 @@ export interface FileRouteTypes {
     | '/checkout/$orderId'
     | '/eventos/$slug'
     | '/organizador/'
+    | '/pdv/'
     | '/validacao/'
     | '/organizador/eventos/novo'
+    | '/pdv/$eventId/caixa'
+    | '/pdv/$eventId/estoque'
+    | '/pdv/$eventId/relatorio'
+    | '/pdv/$eventId/retirada'
     | '/validacao/$eventId/scanner'
     | '/organizador/eventos/$id/dashboard'
     | '/organizador/eventos/$id/editar'
@@ -184,8 +238,13 @@ export interface FileRouteTypes {
     | '/checkout/$orderId'
     | '/eventos/$slug'
     | '/organizador'
+    | '/pdv'
     | '/validacao'
     | '/organizador/eventos/novo'
+    | '/pdv/$eventId/caixa'
+    | '/pdv/$eventId/estoque'
+    | '/pdv/$eventId/relatorio'
+    | '/pdv/$eventId/retirada'
     | '/validacao/$eventId/scanner'
     | '/organizador/eventos/$id/dashboard'
     | '/organizador/eventos/$id/editar'
@@ -201,8 +260,13 @@ export interface FileRouteTypes {
     | '/checkout/$orderId'
     | '/eventos/$slug'
     | '/_authenticated/organizador/'
+    | '/_authenticated/pdv/'
     | '/_authenticated/validacao/'
     | '/_authenticated/organizador/eventos/novo'
+    | '/_authenticated/pdv/$eventId/caixa'
+    | '/_authenticated/pdv/$eventId/estoque'
+    | '/_authenticated/pdv/$eventId/relatorio'
+    | '/_authenticated/pdv/$eventId/retirada'
     | '/_authenticated/validacao/$eventId/scanner'
     | '/_authenticated/organizador/eventos/$id/dashboard'
     | '/_authenticated/organizador/eventos/$id/editar'
@@ -283,6 +347,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOrganizadorIndexRouteImport
       parentRoute: typeof AuthenticatedOrganizadorRoute
     }
+    '/_authenticated/pdv/': {
+      id: '/_authenticated/pdv/'
+      path: '/pdv'
+      fullPath: '/pdv/'
+      preLoaderRoute: typeof AuthenticatedPdvIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/validacao/': {
       id: '/_authenticated/validacao/'
       path: '/validacao'
@@ -296,6 +367,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/organizador/eventos/novo'
       preLoaderRoute: typeof AuthenticatedOrganizadorEventosNovoRouteImport
       parentRoute: typeof AuthenticatedOrganizadorRoute
+    }
+    '/_authenticated/pdv/$eventId/caixa': {
+      id: '/_authenticated/pdv/$eventId/caixa'
+      path: '/pdv/$eventId/caixa'
+      fullPath: '/pdv/$eventId/caixa'
+      preLoaderRoute: typeof AuthenticatedPdvEventIdCaixaRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pdv/$eventId/estoque': {
+      id: '/_authenticated/pdv/$eventId/estoque'
+      path: '/pdv/$eventId/estoque'
+      fullPath: '/pdv/$eventId/estoque'
+      preLoaderRoute: typeof AuthenticatedPdvEventIdEstoqueRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pdv/$eventId/relatorio': {
+      id: '/_authenticated/pdv/$eventId/relatorio'
+      path: '/pdv/$eventId/relatorio'
+      fullPath: '/pdv/$eventId/relatorio'
+      preLoaderRoute: typeof AuthenticatedPdvEventIdRelatorioRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/pdv/$eventId/retirada': {
+      id: '/_authenticated/pdv/$eventId/retirada'
+      path: '/pdv/$eventId/retirada'
+      fullPath: '/pdv/$eventId/retirada'
+      preLoaderRoute: typeof AuthenticatedPdvEventIdRetiradaRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/validacao/$eventId/scanner': {
       id: '/_authenticated/validacao/$eventId/scanner'
@@ -357,14 +456,24 @@ const AuthenticatedOrganizadorRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedMeusIngressosRoute: typeof AuthenticatedMeusIngressosRoute
   AuthenticatedOrganizadorRoute: typeof AuthenticatedOrganizadorRouteWithChildren
+  AuthenticatedPdvIndexRoute: typeof AuthenticatedPdvIndexRoute
   AuthenticatedValidacaoIndexRoute: typeof AuthenticatedValidacaoIndexRoute
+  AuthenticatedPdvEventIdCaixaRoute: typeof AuthenticatedPdvEventIdCaixaRoute
+  AuthenticatedPdvEventIdEstoqueRoute: typeof AuthenticatedPdvEventIdEstoqueRoute
+  AuthenticatedPdvEventIdRelatorioRoute: typeof AuthenticatedPdvEventIdRelatorioRoute
+  AuthenticatedPdvEventIdRetiradaRoute: typeof AuthenticatedPdvEventIdRetiradaRoute
   AuthenticatedValidacaoEventIdScannerRoute: typeof AuthenticatedValidacaoEventIdScannerRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMeusIngressosRoute: AuthenticatedMeusIngressosRoute,
   AuthenticatedOrganizadorRoute: AuthenticatedOrganizadorRouteWithChildren,
+  AuthenticatedPdvIndexRoute: AuthenticatedPdvIndexRoute,
   AuthenticatedValidacaoIndexRoute: AuthenticatedValidacaoIndexRoute,
+  AuthenticatedPdvEventIdCaixaRoute: AuthenticatedPdvEventIdCaixaRoute,
+  AuthenticatedPdvEventIdEstoqueRoute: AuthenticatedPdvEventIdEstoqueRoute,
+  AuthenticatedPdvEventIdRelatorioRoute: AuthenticatedPdvEventIdRelatorioRoute,
+  AuthenticatedPdvEventIdRetiradaRoute: AuthenticatedPdvEventIdRetiradaRoute,
   AuthenticatedValidacaoEventIdScannerRoute:
     AuthenticatedValidacaoEventIdScannerRoute,
 }
