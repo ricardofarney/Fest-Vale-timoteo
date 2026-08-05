@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Ticket } from "lucide-react";
+import { FEST } from "@/lib/fest";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Entrar — Fest Vale Timóteo" }] }),
@@ -47,10 +48,14 @@ function LoginPage() {
         <p className="mt-2 text-sm text-muted-foreground">Acesse sua conta para comprar e gerenciar ingressos</p>
       </div>
       <Card className="p-6">
-        <Button onClick={handleGoogle} variant="outline" className="w-full">Entrar com Google</Button>
-        <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
-          <div className="h-px flex-1 bg-border" /> ou <div className="h-px flex-1 bg-border" />
-        </div>
+        {FEST.googleHabilitado && (
+          <>
+            <Button onClick={handleGoogle} variant="outline" className="w-full">Entrar com Google</Button>
+            <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+              <div className="h-px flex-1 bg-border" /> ou <div className="h-px flex-1 bg-border" />
+            </div>
+          </>
+        )}
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">E-mail</Label>

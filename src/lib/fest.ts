@@ -32,6 +32,13 @@ export const FEST = {
   /** Domínio oficial do site. */
   dominio: "festvaletimoteo.com.br",
 
+  /**
+   * Login com Google. Só ative depois de configurar o provedor Google no
+   * painel do Supabase (Authentication > Providers). Com false, o botão
+   * some das telas de login e cadastro.
+   */
+  googleHabilitado: false,
+
   contato: {
     email: "",
     whatsapp: "",
