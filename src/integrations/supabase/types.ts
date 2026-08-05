@@ -102,6 +102,10 @@ export type Database = {
           id: string
           name: string | null
           user_id: string
+          pode_validar: boolean
+          pode_vender: boolean
+          pode_autorizar_cortesia: boolean
+          pode_entregar: boolean
         }
         Insert: {
           created_at?: string
@@ -120,6 +124,10 @@ export type Database = {
           id?: string
           name?: string | null
           user_id?: string
+          pode_validar?: boolean
+          pode_vender?: boolean
+          pode_autorizar_cortesia?: boolean
+          pode_entregar?: boolean
         }
         Relationships: [
           {
@@ -168,6 +176,139 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      products: {
+        Row: {
+          active: boolean
+          category: string | null
+          controla_estoque: boolean
+          created_at: string
+          event_id: string
+          id: string
+          image_url: string | null
+          name: string
+          price_cents: number
+          sort_order: number
+          stock_alert: number
+          stock_qty: number
+          unit: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          controla_estoque?: boolean
+          created_at?: string
+          event_id: string
+          id?: string
+          image_url?: string | null
+          name: string
+          price_cents?: number
+          sort_order?: number
+          stock_alert?: number
+          stock_qty?: number
+          unit?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          controla_estoque?: boolean
+          event_id?: string
+          id?: string
+          image_url?: string | null
+          name?: string
+          price_cents?: number
+          sort_order?: number
+          stock_alert?: number
+          stock_qty?: number
+          unit?: string
+        }
+        Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: Database["public"]["Enums"]["stock_kind"]
+          product_id: string
+          qty: number
+          reason: string | null
+          sale_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["stock_kind"]
+          product_id: string
+          qty: number
+          reason?: string | null
+          sale_id?: string | null
+        }
+        Update: {
+          kind?: Database["public"]["Enums"]["stock_kind"]
+          qty?: number
+          reason?: string | null
+        }
+        Relationships: []
+      }
+      pos_sales: {
+        Row: {
+          authorized_by: string | null
+          cancelled_at: string | null
+          courtesy_reason: string | null
+          created_at: string
+          delivered_at: string | null
+          delivered_by: string | null
+          event_id: string
+          external_payment_id: string | null
+          id: string
+          operator_id: string
+          payment_method: Database["public"]["Enums"]["pos_payment"]
+          station: string | null
+          status: Database["public"]["Enums"]["pos_status"]
+          ticket_token: string
+          total_cents: number
+        }
+        Insert: {
+          event_id: string
+          operator_id: string
+          payment_method: Database["public"]["Enums"]["pos_payment"]
+          station?: string | null
+          courtesy_reason?: string | null
+          external_payment_id?: string | null
+          total_cents?: number
+        }
+        Update: {
+          status?: Database["public"]["Enums"]["pos_status"]
+          delivered_at?: string | null
+          delivered_by?: string | null
+          cancelled_at?: string | null
+          total_cents?: number
+        }
+        Relationships: []
+      }
+      pos_sale_items: {
+        Row: {
+          id: string
+          name_snapshot: string
+          product_id: string
+          qty: number
+          sale_id: string
+          unit_price_cents: number
+        }
+        Insert: {
+          id?: string
+          name_snapshot: string
+          product_id: string
+          qty: number
+          sale_id: string
+          unit_price_cents: number
+        }
+        Update: {
+          qty?: number
+        }
+        Relationships: []
       }
       events: {
         Row: {
@@ -526,6 +667,26 @@ export type Database = {
         Returns: Json
       }
       event_checkin_stats: { Args: { _event_id: string }; Returns: Json }
+      pode_vender: { Args: { _event_id: string; _user_id?: string }; Returns: boolean }
+      pode_autorizar_cortesia: { Args: { _event_id: string; _user_id?: string }; Returns: boolean }
+      pos_registrar_venda: {
+        Args: {
+          _event_id: string
+          _itens: Json
+          _payment_method: Database["public"]["Enums"]["pos_payment"]
+          _station?: string
+          _courtesy_reason?: string
+          _external_payment_id?: string
+        }
+        Returns: Json
+      }
+      pos_entrada_estoque: {
+        Args: { _product_id: string; _qty: number; _reason?: string }
+        Returns: Json
+      }
+      pos_cancelar_venda: { Args: { _sale_id: string; _motivo: string }; Returns: Json }
+      pos_retirar: { Args: { _ticket_token: string }; Returns: Json }
+      pos_relatorio: { Args: { _event_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -560,6 +721,9 @@ export type Database = {
     }
     Enums: {
       app_role: "organizer" | "attendee" | "staff"
+      stock_kind: "entrada" | "venda" | "cortesia" | "perda" | "ajuste" | "estorno"
+      pos_payment: "dinheiro" | "cartao" | "pix" | "cortesia"
+      pos_status: "paga" | "cancelada"
       event_status: "draft" | "published" | "cancelled"
       order_status: "pending" | "paid" | "cancelled" | "expired"
       ticket_status: "valid" | "checked_in" | "cancelled"
@@ -691,6 +855,9 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["organizer", "attendee", "staff"],
+      stock_kind: ["entrada", "venda", "cortesia", "perda", "ajuste", "estorno"],
+      pos_payment: ["dinheiro", "cartao", "pix", "cortesia"],
+      pos_status: ["paga", "cancelada"],
       event_status: ["draft", "published", "cancelled"],
       order_status: ["pending", "paid", "cancelled", "expired"],
       ticket_status: ["valid", "checked_in", "cancelled"],
