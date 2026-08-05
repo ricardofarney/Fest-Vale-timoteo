@@ -4,7 +4,7 @@ import { usePapeis } from "@/hooks/use-papeis";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { FEST } from "@/lib/fest";
-import { Ticket, LayoutDashboard, ScanLine, LogOut } from "lucide-react";
+import { Ticket, LayoutDashboard, ScanLine, LogOut, ShoppingCart } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -93,6 +93,11 @@ export function SiteHeader() {
                 {podeValidar && (
                   <DropdownMenuItem asChild>
                     <Link to="/validacao"><ScanLine className="mr-2 h-4 w-4" />Validação na entrada</Link>
+                  </DropdownMenuItem>
+                )}
+                {podeValidar && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/pdv"><ShoppingCart className="mr-2 h-4 w-4" />PDV do evento</Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
