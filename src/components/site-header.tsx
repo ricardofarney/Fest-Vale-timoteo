@@ -23,7 +23,7 @@ const ancoras = [
 
 export function SiteHeader() {
   const { user } = useAuth();
-  const { organizador, podeValidar } = usePapeis();
+  const { organizador, podeValidar, podeUsarPdv } = usePapeis();
   const naHome = useRouterState({ select: (s) => s.location.pathname === "/" });
 
   const handleLogout = async () => {
@@ -95,7 +95,7 @@ export function SiteHeader() {
                     <Link to="/validacao"><ScanLine className="mr-2 h-4 w-4" />Validação na entrada</Link>
                   </DropdownMenuItem>
                 )}
-                {podeValidar && (
+                {podeUsarPdv && (
                   <DropdownMenuItem asChild>
                     <Link to="/pdv"><ShoppingCart className="mr-2 h-4 w-4" />PDV do evento</Link>
                   </DropdownMenuItem>
