@@ -2,7 +2,7 @@ import { createFileRoute, Link, Outlet } from "@tanstack/react-router";
 import { LayoutDashboard, CalendarPlus, ListChecks } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/organizador")({
-  head: () => ({ meta: [{ title: "Painel do organizador — Palco" }] }),
+  head: () => ({ meta: [{ title: "Painel do organizador — Fest Vale Timóteo" }] }),
   component: OrganizerLayout,
 });
 

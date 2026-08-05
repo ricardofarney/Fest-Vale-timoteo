@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { CreditCard, QrCode, FileText, Clock, ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/checkout/$orderId")({
-  head: () => ({ meta: [{ title: "Finalizar compra — Palco" }] }),
+  head: () => ({ meta: [{ title: "Finalizar compra — Fest Vale Timóteo" }] }),
   component: CheckoutPage,
 });
 

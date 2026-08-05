@@ -8,7 +8,7 @@ import { ScanLine, Calendar } from "lucide-react";
 import { fmtDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/validacao/")({
-  head: () => ({ meta: [{ title: "Validação — Palco" }] }),
+  head: () => ({ meta: [{ title: "Validação — Fest Vale Timóteo" }] }),
   component: ValidationHome,
 });
 

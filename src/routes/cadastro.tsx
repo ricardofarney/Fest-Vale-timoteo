@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Ticket } from "lucide-react";
 
 export const Route = createFileRoute("/cadastro")({
-  head: () => ({ meta: [{ title: "Criar conta — Palco" }] }),
+  head: () => ({ meta: [{ title: "Criar conta — Fest Vale Timóteo" }] }),
   component: SignupPage,
 });
 

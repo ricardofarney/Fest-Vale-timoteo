@@ -8,7 +8,7 @@ import { deviceId, enqueueScan, listPending, deleteScan } from "@/lib/scan-queue
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/validacao/$eventId/scanner")({
-  head: () => ({ meta: [{ title: "Scanner — Palco" }] }),
+  head: () => ({ meta: [{ title: "Scanner — Fest Vale Timóteo" }] }),
   component: Scanner,
 });
 

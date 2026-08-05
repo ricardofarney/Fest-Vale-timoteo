@@ -9,7 +9,7 @@ import { fmtDateTime } from "@/lib/format";
 import { Ticket, Calendar, MapPin, CheckCircle2, Ban } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/meus-ingressos")({
-  head: () => ({ meta: [{ title: "Meus ingressos — Palco" }] }),
+  head: () => ({ meta: [{ title: "Meus ingressos — Fest Vale Timóteo" }] }),
   component: MyTickets,
 });
 
