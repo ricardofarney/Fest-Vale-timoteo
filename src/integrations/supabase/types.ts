@@ -681,11 +681,153 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_contatos: {
+        Row: {
+          bloqueado: boolean
+          dia_contador: string
+          event_id: string
+          humano_assumiu: boolean
+          humano_ate: string | null
+          id: string
+          msgs_hoje: number
+          nome: string | null
+          primeira_em: string
+          ultima_em: string
+          wa_id: string
+        }
+        Insert: {
+          bloqueado?: boolean
+          dia_contador?: string
+          event_id: string
+          humano_assumiu?: boolean
+          humano_ate?: string | null
+          id?: string
+          msgs_hoje?: number
+          nome?: string | null
+          primeira_em?: string
+          ultima_em?: string
+          wa_id: string
+        }
+        Update: {
+          bloqueado?: boolean
+          dia_contador?: string
+          event_id?: string
+          humano_assumiu?: boolean
+          humano_ate?: string | null
+          id?: string
+          msgs_hoje?: number
+          nome?: string | null
+          primeira_em?: string
+          ultima_em?: string
+          wa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_contatos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_faq: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          event_id: string
+          id: string
+          ordem: number
+          pergunta: string
+          resposta: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          event_id: string
+          id?: string
+          ordem?: number
+          pergunta: string
+          resposta: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          event_id?: string
+          id?: string
+          ordem?: number
+          pergunta?: string
+          resposta?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_faq_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_mensagens: {
+        Row: {
+          contato_id: string
+          created_at: string
+          direcao: Database["public"]["Enums"]["wa_direcao"]
+          erro: string | null
+          id: string
+          meta_msg_id: string | null
+          por_ia: boolean
+          precisou_humano: boolean
+          texto: string
+        }
+        Insert: {
+          contato_id: string
+          created_at?: string
+          direcao: Database["public"]["Enums"]["wa_direcao"]
+          erro?: string | null
+          id?: string
+          meta_msg_id?: string | null
+          por_ia?: boolean
+          precisou_humano?: boolean
+          texto: string
+        }
+        Update: {
+          contato_id?: string
+          created_at?: string
+          direcao?: Database["public"]["Enums"]["wa_direcao"]
+          erro?: string | null
+          id?: string
+          meta_msg_id?: string | null
+          por_ia?: boolean
+          precisou_humano?: boolean
+          texto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_mensagens_contato_id_fkey"
+            columns: ["contato_id"]
+            isOneToOne: false
+            referencedRelation: "wa_contatos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      admin_usuarios: { Args: never; Returns: Json }
+      admin_visao_geral: { Args: { _event_id: string }; Returns: Json }
+      wa_pedidos_por_email: {
+        Args: { _email: string; _event_id: string }
+        Returns: Json
+      }
+      wa_resumo_ingressos: { Args: { _event_id: string }; Returns: Json }
       confirm_order_paid_admin: {
         Args: {
           _order_id: string
@@ -778,6 +920,7 @@ export type Database = {
       event_status: "draft" | "published" | "cancelled"
       order_status: "pending" | "paid" | "cancelled" | "expired"
       ticket_status: "valid" | "checked_in" | "cancelled"
+      wa_direcao: "recebida" | "enviada"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -913,6 +1056,7 @@ export const Constants = {
       event_status: ["draft", "published", "cancelled"],
       order_status: ["pending", "paid", "cancelled", "expired"],
       ticket_status: ["valid", "checked_in", "cancelled"],
+      wa_direcao: ["recebida", "enviada"],
     },
   },
 } as const
