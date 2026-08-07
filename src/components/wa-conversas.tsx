@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -14,7 +15,10 @@ import {
   MessageCircle,
   Search,
   Send,
+  Link2,
+  Ticket,
   UserRound,
+  X,
   Zap,
 } from "lucide-react";
 
@@ -32,6 +36,7 @@ export type Contato = {
   ultima_direcao: "recebida" | "enviada" | null;
   nao_lidas: number;
   precisa_humano: boolean;
+  email_comprador: string | null;
 };
 
 type Mensagem = {
@@ -111,7 +116,7 @@ export function WaConversas({ eventId }: { eventId: string }) {
       const { data, error } = await supabase
         .from("wa_contatos")
         .select(
-          "id, wa_id, nome, humano_assumiu, humano_ate, bloqueado, ultima_em, ultima_mensagem, ultima_direcao, nao_lidas, precisa_humano",
+          "id, wa_id, nome, humano_assumiu, humano_ate, bloqueado, ultima_em, ultima_mensagem, ultima_direcao, nao_lidas, precisa_humano, email_comprador",
         )
         .eq("event_id", eventId)
         .order("ultima_em", { ascending: false })
@@ -352,6 +357,7 @@ function PainelConversa({
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [mostrarRapidas, setMostrarRapidas] = useState(false);
+  const [mostrarIngressos, setMostrarIngressos] = useState(false);
   const fim = useRef<HTMLDivElement>(null);
 
   const { data: mensagens, isLoading } = useQuery({
@@ -432,6 +438,15 @@ function PainelConversa({
         <div className="flex shrink-0 gap-1">
           <Button
             size="sm"
+            variant={mostrarIngressos ? "default" : "outline"}
+            onClick={() => setMostrarIngressos((v) => !v)}
+            title="Ingressos desta pessoa"
+          >
+            <Ticket className="mr-1.5 h-4 w-4" />
+            Ingressos
+          </Button>
+          <Button
+            size="sm"
             variant="outline"
             onClick={() =>
               ajustar(
@@ -456,6 +471,10 @@ function PainelConversa({
           </Button>
         </div>
       </div>
+
+      {mostrarIngressos && (
+        <PainelIngressos contato={contato} onFechar={() => setMostrarIngressos(false)} onMudou={onMudou} />
+      )}
 
       {/* ───────────────────────────────────────────────── mensagens */}
       <div className="flex-1 space-y-2 overflow-y-auto p-4">
@@ -565,6 +584,187 @@ function Balao({ m }: { m: Mensagem }) {
         {m.precisou_humano && <span>· pediu atendente</span>}
       </div>
       {m.erro && <p className="mt-1.5 text-xs text-destructive">Não enviada: {m.erro}</p>}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════ ingressos desta pessoa */
+
+type Pedido = {
+  id: string;
+  status: string;
+  total_cents: number;
+  criado_em: string;
+  pago_em: string | null;
+  meio: string | null;
+  origem: string;
+  ingressos: number;
+  usados: number;
+  itens: Array<{ tipo: string; lote: string; qtd: number }>;
+};
+
+type Ingressos = {
+  vinculado: boolean;
+  email?: string;
+  resumo?: { pedidos: number; pagos: number; aguardando: number; gasto_cents: number };
+  pedidos?: Pedido[];
+};
+
+const SITUACAO: Record<string, { rotulo: string; classe: string }> = {
+  paid: { rotulo: "Pago", classe: "bg-success/20 text-success" },
+  pending: { rotulo: "Aguardando pagamento", classe: "bg-primary/20 text-primary" },
+  expired: { rotulo: "Expirado", classe: "bg-muted text-muted-foreground" },
+  cancelled: { rotulo: "Cancelado", classe: "bg-destructive/20 text-destructive" },
+};
+
+/**
+ * Mostra o que a pessoa comprou, se pagou e se já entrou no evento.
+ *
+ * O vínculo é sempre pelo e-mail da compra — nunca pelo telefone de quem está
+ * escrevendo, porque o número de quem manda mensagem não prova nada sobre
+ * quem comprou.
+ */
+function PainelIngressos({
+  contato, onFechar, onMudou,
+}: { contato: Contato; onFechar: () => void; onMudou: () => void }) {
+  const qc = useQueryClient();
+  const [email, setEmail] = useState(contato.email_comprador ?? "");
+  const [salvando, setSalvando] = useState(false);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["wa-ingressos", contato.id, contato.email_comprador],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("wa_ingressos_do_contato", {
+        _contato_id: contato.id,
+      });
+      if (error) throw error;
+      return data as unknown as Ingressos;
+    },
+  });
+
+  const vincular = async (novo: string) => {
+    setSalvando(true);
+    try {
+      const { error } = await supabase.rpc("wa_vincular_email", {
+        _contato_id: contato.id,
+        _email: novo,
+      });
+      if (error) throw error;
+      toast.success(novo ? "E-mail vinculado" : "Vínculo removido");
+      qc.invalidateQueries({ queryKey: ["wa-ingressos", contato.id] });
+      onMudou();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não consegui vincular");
+    } finally {
+      setSalvando(false);
+    }
+  };
+
+  return (
+    <div className="border-b border-border/60 bg-secondary/30 p-4">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm font-semibold">
+          <Ticket className="h-4 w-4 text-primary" />
+          Ingressos desta pessoa
+        </div>
+        <Button size="icon" variant="ghost" className="h-8 w-8" onClick={onFechar}>
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {isLoading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+
+      {/* ── sem vínculo: pedir o e-mail da compra */}
+      {!isLoading && !data?.vinculado && (
+        <div>
+          <p className="text-sm text-muted-foreground">
+            Ainda não sabemos quem é esta pessoa no sistema. Informe o e-mail que ela usou na
+            compra para ver os ingressos aqui.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="email@dapessoa.com"
+              className="h-10 min-w-0 flex-1"
+              type="email"
+            />
+            <Button size="sm" className="h-10" onClick={() => vincular(email)} disabled={salvando || !email.trim()}>
+              {salvando ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Link2 className="mr-1.5 h-4 w-4" />}
+              Vincular
+            </Button>
+          </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Confira o e-mail com a pessoa antes de vincular. Nunca usamos o telefone como prova
+            de compra.
+          </p>
+        </div>
+      )}
+
+      {/* ── vinculado: mostra o que ela comprou */}
+      {!isLoading && data?.vinculado && (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="truncate text-sm text-muted-foreground">{data.email}</span>
+            <Button size="sm" variant="ghost" className="h-8" onClick={() => vincular("")} disabled={salvando}>
+              Desvincular
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <Mini rotulo="Pedidos pagos" valor={String(data.resumo?.pagos ?? 0)} />
+            <Mini rotulo="Aguardando" valor={String(data.resumo?.aguardando ?? 0)} />
+            <Mini rotulo="Total gasto" valor={brl(data.resumo?.gasto_cents ?? 0)} />
+          </div>
+
+          {data.pedidos?.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Nenhum pedido neste e-mail. Confirme se foi esse mesmo que ela usou.
+            </p>
+          )}
+
+          <div className="space-y-2">
+            {data.pedidos?.map((p) => {
+              const s = SITUACAO[p.status] ?? { rotulo: p.status, classe: "bg-muted" };
+              return (
+                <div key={p.id} className="rounded-lg border border-border/60 bg-card p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className={`rounded px-2 py-0.5 text-xs font-medium ${s.classe}`}>
+                      {s.rotulo}
+                    </span>
+                    <span className="font-semibold tabular-nums">{brl(p.total_cents)}</span>
+                  </div>
+
+                  <div className="mt-2 text-sm">
+                    {p.itens.map((i, n) => (
+                      <div key={n} className="text-muted-foreground">
+                        {i.qtd}× {i.tipo} · {i.lote}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    <span>
+                      {p.usados} de {p.ingressos} {p.ingressos === 1 ? "entrada usada" : "entradas usadas"}
+                    </span>
+                    {p.origem === "portaria" && <span>· vendido na portaria</span>}
+                    {p.pago_em && <span>· pago em {new Date(p.pago_em).toLocaleDateString("pt-BR")}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Mini({ rotulo, valor }: { rotulo: string; valor: string }) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-card p-2">
+      <div className="font-display text-base font-bold tabular-nums">{valor}</div>
+      <div className="text-[10px] leading-tight text-muted-foreground">{rotulo}</div>
     </div>
   );
 }
