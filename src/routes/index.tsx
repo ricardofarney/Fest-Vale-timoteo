@@ -120,28 +120,23 @@ function Apresenta() {
   );
 
   return (
-    <div className="flex flex-col items-center gap-6 md:flex-row md:gap-10">
-      {/* fio de separação: horizontal no celular, vertical no computador */}
-      <div className="h-px w-20 bg-border/70 md:h-32 md:w-px" aria-hidden="true" />
-
-      <div className="flex flex-col items-center gap-3">
-        <span className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground md:text-xs">
-          {a.verbo}
-        </span>
-        {a.site ? (
-          <a
-            href={a.site}
-            target="_blank"
-            rel="noreferrer"
-            className="transition-opacity hover:opacity-80"
-            aria-label={`${a.nome} ${a.verbo} o ${FEST.edicao}º ${FEST.nome} ${FEST.cidade}`}
-          >
-            {marca}
-          </a>
-        ) : (
-          marca
-        )}
-      </div>
+    <div className="flex shrink-0 flex-col items-center gap-3">
+      {a.site ? (
+        <a
+          href={a.site}
+          target="_blank"
+          rel="noreferrer"
+          className="transition-opacity hover:opacity-80"
+          aria-label={`${a.nome} ${a.verbo} o ${FEST.edicao}º ${FEST.nome} ${FEST.cidade}`}
+        >
+          {marca}
+        </a>
+      ) : (
+        marca
+      )}
+      <span className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground md:text-xs">
+        {a.verbo}
+      </span>
     </div>
   );
 }
@@ -160,7 +155,16 @@ function Hero() {
 
       <div className="container mx-auto px-4 py-20 md:py-28">
         <div className="mx-auto max-w-4xl text-center">
+          {/* Netvale à esquerda, logo do festival à direita: a frase
+              "Netvale apresenta o Fest Vale" se lê na ordem natural. */}
           <div className="mb-8 flex flex-col items-center justify-center gap-6 md:flex-row md:gap-10">
+            <Apresenta />
+
+            {/* fio de separação: horizontal no celular, vertical no computador */}
+            {FEST.apresenta.nome && (
+              <div className="h-px w-20 shrink-0 bg-border/70 md:h-32 md:w-px" aria-hidden="true" />
+            )}
+
             {FEST.imagens.logo ? (
               <img
                 src={FEST.imagens.logo}
@@ -175,8 +179,6 @@ function Hero() {
                 <span className="block text-primary">{FEST.cidade}</span>
               </h1>
             )}
-
-            <Apresenta />
           </div>
 
           <h1 className="font-display text-4xl font-bold leading-tight md:text-6xl">
