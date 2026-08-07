@@ -205,14 +205,48 @@ export const FEST = {
   ],
 
   /**
+   * Patrocinador que APRESENTA o evento — a cota master.
+   * Aparece no topo da home, antes do nome do festival ("Netvale apresenta"),
+   * e abre a página de patrocinadores.
+   * Deixe `nome` vazio para o site esconder a assinatura por completo.
+   * Sem `logo`, o nome é desenhado com a tipografia do site.
+   */
+  apresenta: {
+    nome: "Netvale",
+    /** Versão de letra branca — o site tem fundo escuro. */
+    logo: "/img/patrocinadores/netvale.webp",
+    /** Versão de letra preta, para e-mail e qualquer peça de fundo claro. */
+    logoFundoClaro: "/img/patrocinadores/netvale-fundo-claro.webp",
+    site: "https://netvale.psi.br/",
+    /** Frase montada no hero: "<nome> apresenta" + nome do evento. */
+    verbo: "apresenta",
+  },
+
+  /**
    * Patrocinadores e apoiadores. Adicione um item por empresa.
    * `logo` aceita caminho local (ex.: "/img/patrocinadores/empresa.png") ou URL.
    * Sem logo, o site desenha o nome da empresa em um card.
    * Níveis: "master" (destaque grande), "ouro", "apoio".
+   * `descricao` só aparece na página /patrocinadores — é opcional.
    */
   patrocinadores: [
-    // { nome: "Empresa Exemplo", logo: "/img/patrocinadores/exemplo.png", site: "", nivel: "master" },
-  ] as Array<{ nome: string; logo?: string; site?: string; nivel: "master" | "ouro" | "apoio" }>,
+    {
+      nome: "Netvale",
+      logo: "/img/patrocinadores/netvale.webp",
+      site: "https://netvale.psi.br/",
+      nivel: "master",
+      descricao:
+        "Provedora de internet do Vale do Aço, a Netvale apresenta a 4ª edição do Fest Vale. " +
+        "É o patrocínio que sustenta a estrutura da festa e faz com que a renda dos ingressos " +
+        "chegue inteira nas ações sociais da loja.",
+    },
+  ] as Array<{
+    nome: string;
+    logo?: string;
+    site?: string;
+    nivel: "master" | "ouro" | "apoio";
+    descricao?: string;
+  }>,
 
   /** Texto do convite para novas cotas de patrocínio. */
   patrocinioCta: {
@@ -220,6 +254,45 @@ export const FEST = {
     texto:
       "Ainda há cotas de patrocínio disponíveis para a 4ª edição. Associe sua empresa a um evento que reúne a cidade e sustenta ações sociais no Vale do Aço.",
     contatoLabel: "Falar sobre patrocínio",
+  },
+
+  /** Conteúdo da página dedicada /patrocinadores. */
+  patrocinioPagina: {
+    titulo: "Quem faz o Fest Vale acontecer",
+    intro:
+      "O Fest Vale só existe porque empresas da região decidem colocar o nome delas em uma festa que devolve o resultado para a cidade. " +
+      "A renda do evento sustenta as ações sociais mantidas pela Loja Maçônica Acácia de Acesita no Vale do Aço — " +
+      "cada cota de patrocínio vira estrutura, e cada ingresso vendido vira trabalho social.",
+    /** O que cada cota entrega. Ajuste conforme fechar com a diretoria. */
+    cotas: [
+      {
+        nome: "Master",
+        resumo: "Assina o evento",
+        itens: [
+          "Marca no topo do site, assinando o evento como \"apresenta\"",
+          "Logo em destaque em toda a comunicação e no material impresso",
+          "Espaço no palco e citação da locução durante o evento",
+          "Exclusividade de segmento",
+        ],
+      },
+      {
+        nome: "Ouro",
+        resumo: "Presença forte",
+        itens: [
+          "Logo na página de patrocinadores e na seção da home",
+          "Marca no material de divulgação",
+          "Citação da locução durante o evento",
+        ],
+      },
+      {
+        nome: "Apoio",
+        resumo: "Apoio institucional",
+        itens: [
+          "Logo na página de patrocinadores",
+          "Menção nas redes sociais do evento",
+        ],
+      },
+    ],
   },
 
   sobre: {
