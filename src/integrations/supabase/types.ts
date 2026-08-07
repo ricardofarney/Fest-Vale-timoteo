@@ -684,6 +684,7 @@ export type Database = {
       wa_contatos: {
         Row: {
           bloqueado: boolean
+          email_comprador: string | null
           nao_lidas: number
           precisa_humano: boolean
           ultima_mensagem: string | null
@@ -701,6 +702,7 @@ export type Database = {
         }
         Insert: {
           bloqueado?: boolean
+          email_comprador?: string | null
           nao_lidas?: number
           precisa_humano?: boolean
           ultima_mensagem?: string | null
@@ -718,6 +720,7 @@ export type Database = {
         }
         Update: {
           bloqueado?: boolean
+          email_comprador?: string | null
           nao_lidas?: number
           precisa_humano?: boolean
           ultima_mensagem?: string | null
@@ -870,6 +873,14 @@ export type Database = {
     Functions: {
       admin_usuarios: { Args: never; Returns: Json }
       admin_visao_geral: { Args: { _event_id: string }; Returns: Json }
+      wa_ingressos_do_contato: {
+        Args: { _contato_id: string }
+        Returns: Json
+      }
+      wa_vincular_email: {
+        Args: { _contato_id: string; _email: string }
+        Returns: Json
+      }
       wa_marcar_lida: {
         Args: { _contato_id: string; _lida?: boolean }
         Returns: undefined
