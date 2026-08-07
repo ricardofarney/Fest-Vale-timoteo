@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { FEST, mapsUrl } from "@/lib/fest";
+import { FEST, mapsUrl, NIVEIS_PATROCINIO, NIVEL_INFO } from "@/lib/fest";
 import { brl } from "@/lib/format";
 import {
   ArrowRight,
@@ -98,10 +98,10 @@ function useCountdown(targetISO: string) {
 }
 
 /**
- * Assinatura do patrocinador master no topo da home.
- * A logo da Netvale é vertical (símbolo em cima, nome embaixo), por isso o
- * "apresenta" fica abaixo dela e não ao lado — do jeito que se lê a frase
- * inteira de cima para baixo: Netvale apresenta o Fest Vale Timóteo.
+ * Assinatura do patrocinador master, ao lado da logo do festival.
+ * Fica à direita, separada por um fio, com a palavra "apresenta" em cima —
+ * é o bloco que dá o destaque da cota master sem competir com a marca do evento.
+ * No celular desce para baixo da logo, porque as duas lado a lado não cabem.
  */
 function Apresenta() {
   const a = FEST.apresenta;
@@ -111,32 +111,37 @@ function Apresenta() {
     <img
       src={a.logo}
       alt={a.nome}
-      className="h-[4.5rem] w-auto object-contain md:h-24"
+      className="h-28 w-auto object-contain md:h-36"
       width={190}
       height={200}
     />
   ) : (
-    <span className="font-display text-2xl font-bold md:text-3xl">{a.nome}</span>
+    <span className="font-display text-3xl font-bold md:text-4xl">{a.nome}</span>
   );
 
   return (
-    <div className="mb-10 flex flex-col items-center gap-2">
-      {a.site ? (
-        <a
-          href={a.site}
-          target="_blank"
-          rel="noreferrer"
-          className="transition-opacity hover:opacity-80"
-          aria-label={`${a.nome} ${a.verbo} o ${FEST.edicaoLabel} do ${FEST.nome} ${FEST.cidade}`}
-        >
-          {marca}
-        </a>
-      ) : (
-        marca
-      )}
-      <span className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground md:text-xs">
-        {a.verbo}
-      </span>
+    <div className="flex flex-col items-center gap-6 md:flex-row md:gap-10">
+      {/* fio de separação: horizontal no celular, vertical no computador */}
+      <div className="h-px w-20 bg-border/70 md:h-32 md:w-px" aria-hidden="true" />
+
+      <div className="flex flex-col items-center gap-3">
+        <span className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground md:text-xs">
+          {a.verbo}
+        </span>
+        {a.site ? (
+          <a
+            href={a.site}
+            target="_blank"
+            rel="noreferrer"
+            className="transition-opacity hover:opacity-80"
+            aria-label={`${a.nome} ${a.verbo} o ${FEST.edicao}º ${FEST.nome} ${FEST.cidade}`}
+          >
+            {marca}
+          </a>
+        ) : (
+          marca
+        )}
+      </div>
     </div>
   );
 }
@@ -155,22 +160,24 @@ function Hero() {
 
       <div className="container mx-auto px-4 py-20 md:py-28">
         <div className="mx-auto max-w-4xl text-center">
-          <Apresenta />
+          <div className="mb-8 flex flex-col items-center justify-center gap-6 md:flex-row md:gap-10">
+            {FEST.imagens.logo ? (
+              <img
+                src={FEST.imagens.logo}
+                alt={`${FEST.nome} ${FEST.cidade} — ${FEST.edicaoLabel}`}
+                className="h-44 w-44 shrink-0 drop-shadow-2xl md:h-64 md:w-64"
+                width={512}
+                height={512}
+              />
+            ) : (
+              <h1 className="font-display text-5xl font-bold leading-[0.95] md:text-8xl">
+                {FEST.nome}
+                <span className="block text-primary">{FEST.cidade}</span>
+              </h1>
+            )}
 
-          {FEST.imagens.logo ? (
-            <img
-              src={FEST.imagens.logo}
-              alt={`${FEST.nome} ${FEST.cidade} — ${FEST.edicaoLabel}`}
-              className="mx-auto mb-8 h-44 w-44 drop-shadow-2xl md:h-64 md:w-64"
-              width={512}
-              height={512}
-            />
-          ) : (
-            <h1 className="font-display text-5xl font-bold leading-[0.95] md:text-8xl">
-              {FEST.nome}
-              <span className="block text-primary">{FEST.cidade}</span>
-            </h1>
-          )}
+            <Apresenta />
+          </div>
 
           <h1 className="font-display text-4xl font-bold leading-tight md:text-6xl">
             {FEST.nome} <span className="text-primary">{FEST.cidade}</span>
@@ -598,8 +605,10 @@ function EdicoesAnteriores() {
 function Patrocinadores() {
   const lista = FEST.patrocinadores;
   const master = lista.filter((p) => p.nivel === "master");
-  const ouro = lista.filter((p) => p.nivel === "ouro");
-  const apoio = lista.filter((p) => p.nivel === "apoio");
+  // Master tem card próprio; as demais cotas viram faixas de logo, na ordem oficial
+  const demais = NIVEIS_PATROCINIO.filter((n) => n !== "master")
+    .map((n) => ({ nivel: n, itens: lista.filter((p) => p.nivel === n) }))
+    .filter((g) => g.itens.length > 0);
   const whatsapp: string = FEST.contato.whatsapp;
   const email: string = FEST.contato.email;
   const contato = whatsapp
@@ -621,12 +630,15 @@ function Patrocinadores() {
           {master.map((p) => (
             <MasterCard key={p.nome} p={p} />
           ))}
-          {ouro.length > 0 && (
-            <LogoGrid titulo="Patrocínio ouro" itens={ouro} altura="h-16" colunas="sm:grid-cols-3" />
-          )}
-          {apoio.length > 0 && (
-            <LogoGrid titulo="Apoio" itens={apoio} altura="h-12" colunas="sm:grid-cols-4" />
-          )}
+          {demais.map((g) => (
+            <LogoGrid
+              key={g.nivel}
+              titulo={NIVEL_INFO[g.nivel].titulo}
+              itens={g.itens}
+              altura={NIVEL_INFO[g.nivel].altura}
+              colunas={NIVEL_INFO[g.nivel].colunas}
+            />
+          ))}
 
           <div className="text-center">
             <Button variant="outline" asChild>
@@ -729,7 +741,7 @@ function LogoGrid({
           return (
             <div
               key={p.nome}
-              className={`grid ${altura === "h-24" ? "min-h-36" : "min-h-24"} place-items-center rounded-xl border border-border/60 bg-card/60 p-6`}
+              className={`grid min-h-32 place-items-center rounded-xl border border-border/60 bg-card/60 p-6`}
             >
               {p.site ? (
                 <a href={p.site} target="_blank" rel="noreferrer" className="transition-opacity hover:opacity-80">

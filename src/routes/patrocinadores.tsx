@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { FEST, absUrl } from "@/lib/fest";
+import { FEST, absUrl, NIVEIS_PATROCINIO, NIVEL_INFO } from "@/lib/fest";
 import { ArrowLeft, Check, Handshake, Ticket } from "lucide-react";
 
 export const Route = createFileRoute("/patrocinadores")({
@@ -26,8 +26,10 @@ type Patrocinador = (typeof FEST.patrocinadores)[number];
 function PaginaPatrocinadores() {
   const lista = FEST.patrocinadores;
   const master = lista.filter((p) => p.nivel === "master");
-  const ouro = lista.filter((p) => p.nivel === "ouro");
-  const apoio = lista.filter((p) => p.nivel === "apoio");
+  // As cotas abaixo da master viram faixas de logo, sempre na ordem oficial
+  const demais = NIVEIS_PATROCINIO.filter((n) => n !== "master")
+    .map((n) => ({ nivel: n, itens: lista.filter((p) => p.nivel === n) }))
+    .filter((g) => g.itens.length > 0);
 
   const whatsapp: string = FEST.contato.whatsapp;
   const email: string = FEST.contato.email;
@@ -70,9 +72,16 @@ function PaginaPatrocinadores() {
           <MasterDestaque key={p.nome} p={p} />
         ))}
 
-        {/* ───────────────────────────────────────────── ouro e apoio */}
-        {ouro.length > 0 && <Faixa titulo="Patrocínio ouro" itens={ouro} altura="h-20" colunas="sm:grid-cols-2 lg:grid-cols-3" />}
-        {apoio.length > 0 && <Faixa titulo="Apoio" itens={apoio} altura="h-14" colunas="sm:grid-cols-3 lg:grid-cols-4" />}
+        {/* ──────────────────────── ouro, prata, bronze e cobre */}
+        {demais.map((g) => (
+          <Faixa
+            key={g.nivel}
+            titulo={NIVEL_INFO[g.nivel].titulo}
+            itens={g.itens}
+            altura={NIVEL_INFO[g.nivel].altura}
+            colunas={NIVEL_INFO[g.nivel].colunas}
+          />
+        ))}
 
         {lista.length === 0 && (
           <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-border/70 bg-card/30 p-12 text-center">
@@ -98,7 +107,7 @@ function PaginaPatrocinadores() {
             </p>
           </div>
 
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             {FEST.patrocinioPagina.cotas.map((c, i) => (
               <div
                 key={c.nome}
