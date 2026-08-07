@@ -775,6 +775,7 @@ function LocalEData() {
             lines={[
               `${FEST.dataLabel} (${FEST.diaSemana})`,
               `Abertura dos portões às ${FEST.horaLabel}`,
+              `Encerramento à ${FEST.horaFimLabel}`,
             ]}
           />
           <InfoCard
