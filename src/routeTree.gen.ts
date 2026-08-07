@@ -14,10 +14,15 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as PatrocinadoresRouteImport } from './routes/patrocinadores'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedMeusIngressosRouteImport } from './routes/_authenticated/meus-ingressos'
 import { Route as AuthenticatedOrganizadorRouteImport } from './routes/_authenticated/organizador'
 import { Route as CheckoutOrderIdRouteImport } from './routes/checkout.$orderId'
 import { Route as EventosSlugRouteImport } from './routes/eventos.$slug'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminIntegracoesRouteImport } from './routes/_authenticated/admin.integracoes'
+import { Route as AuthenticatedAdminUsuariosRouteImport } from './routes/_authenticated/admin.usuarios'
+import { Route as AuthenticatedAdminWhatsappRouteImport } from './routes/_authenticated/admin.whatsapp'
 import { Route as AuthenticatedOrganizadorIndexRouteImport } from './routes/_authenticated/organizador.index'
 import { Route as AuthenticatedPdvIndexRouteImport } from './routes/_authenticated/pdv.index'
 import { Route as AuthenticatedValidacaoIndexRouteImport } from './routes/_authenticated/validacao.index'
@@ -56,6 +61,11 @@ const PatrocinadoresRoute = PatrocinadoresRouteImport.update({
   path: '/patrocinadores',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedMeusIngressosRoute =
   AuthenticatedMeusIngressosRouteImport.update({
     id: '/meus-ingressos',
@@ -78,6 +88,29 @@ const EventosSlugRoute = EventosSlugRouteImport.update({
   path: '/eventos/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminIntegracoesRoute =
+  AuthenticatedAdminIntegracoesRouteImport.update({
+    id: '/integracoes',
+    path: '/integracoes',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminUsuariosRoute =
+  AuthenticatedAdminUsuariosRouteImport.update({
+    id: '/usuarios',
+    path: '/usuarios',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminWhatsappRoute =
+  AuthenticatedAdminWhatsappRouteImport.update({
+    id: '/whatsapp',
+    path: '/whatsapp',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedOrganizadorIndexRoute =
   AuthenticatedOrganizadorIndexRouteImport.update({
     id: '/',
@@ -161,10 +194,15 @@ export interface FileRoutesByFullPath {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/patrocinadores': typeof PatrocinadoresRoute
+  '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/meus-ingressos': typeof AuthenticatedMeusIngressosRoute
   '/organizador': typeof AuthenticatedOrganizadorRouteWithChildren
   '/checkout/$orderId': typeof CheckoutOrderIdRoute
   '/eventos/$slug': typeof EventosSlugRoute
+  '/admin/integracoes': typeof AuthenticatedAdminIntegracoesRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/organizador/': typeof AuthenticatedOrganizadorIndexRoute
   '/pdv/': typeof AuthenticatedPdvIndexRoute
   '/validacao/': typeof AuthenticatedValidacaoIndexRoute
@@ -187,6 +225,10 @@ export interface FileRoutesByTo {
   '/meus-ingressos': typeof AuthenticatedMeusIngressosRoute
   '/checkout/$orderId': typeof CheckoutOrderIdRoute
   '/eventos/$slug': typeof EventosSlugRoute
+  '/admin/integracoes': typeof AuthenticatedAdminIntegracoesRoute
+  '/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/organizador': typeof AuthenticatedOrganizadorIndexRoute
   '/pdv': typeof AuthenticatedPdvIndexRoute
   '/validacao': typeof AuthenticatedValidacaoIndexRoute
@@ -208,10 +250,15 @@ export interface FileRoutesById {
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/patrocinadores': typeof PatrocinadoresRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/meus-ingressos': typeof AuthenticatedMeusIngressosRoute
   '/_authenticated/organizador': typeof AuthenticatedOrganizadorRouteWithChildren
   '/checkout/$orderId': typeof CheckoutOrderIdRoute
   '/eventos/$slug': typeof EventosSlugRoute
+  '/_authenticated/admin/integracoes': typeof AuthenticatedAdminIntegracoesRoute
+  '/_authenticated/admin/usuarios': typeof AuthenticatedAdminUsuariosRoute
+  '/_authenticated/admin/whatsapp': typeof AuthenticatedAdminWhatsappRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/organizador/': typeof AuthenticatedOrganizadorIndexRoute
   '/_authenticated/pdv/': typeof AuthenticatedPdvIndexRoute
   '/_authenticated/validacao/': typeof AuthenticatedValidacaoIndexRoute
@@ -233,10 +280,15 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/login'
     | '/patrocinadores'
+    | '/admin'
     | '/meus-ingressos'
     | '/organizador'
     | '/checkout/$orderId'
     | '/eventos/$slug'
+    | '/admin/integracoes'
+    | '/admin/usuarios'
+    | '/admin/whatsapp'
+    | '/admin/'
     | '/organizador/'
     | '/pdv/'
     | '/validacao/'
@@ -259,6 +311,10 @@ export interface FileRouteTypes {
     | '/meus-ingressos'
     | '/checkout/$orderId'
     | '/eventos/$slug'
+    | '/admin/integracoes'
+    | '/admin/usuarios'
+    | '/admin/whatsapp'
+    | '/admin'
     | '/organizador'
     | '/pdv'
     | '/validacao'
@@ -279,10 +335,15 @@ export interface FileRouteTypes {
     | '/cadastro'
     | '/login'
     | '/patrocinadores'
+    | '/_authenticated/admin'
     | '/_authenticated/meus-ingressos'
     | '/_authenticated/organizador'
     | '/checkout/$orderId'
     | '/eventos/$slug'
+    | '/_authenticated/admin/integracoes'
+    | '/_authenticated/admin/usuarios'
+    | '/_authenticated/admin/whatsapp'
+    | '/_authenticated/admin/'
     | '/_authenticated/organizador/'
     | '/_authenticated/pdv/'
     | '/_authenticated/validacao/'
@@ -345,6 +406,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PatrocinadoresRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/meus-ingressos': {
       id: '/_authenticated/meus-ingressos'
       path: '/meus-ingressos'
@@ -372,6 +440,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/eventos/$slug'
       preLoaderRoute: typeof EventosSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/integracoes': {
+      id: '/_authenticated/admin/integracoes'
+      path: '/integracoes'
+      fullPath: '/admin/integracoes'
+      preLoaderRoute: typeof AuthenticatedAdminIntegracoesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/usuarios': {
+      id: '/_authenticated/admin/usuarios'
+      path: '/usuarios'
+      fullPath: '/admin/usuarios'
+      preLoaderRoute: typeof AuthenticatedAdminUsuariosRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/whatsapp': {
+      id: '/_authenticated/admin/whatsapp'
+      path: '/whatsapp'
+      fullPath: '/admin/whatsapp'
+      preLoaderRoute: typeof AuthenticatedAdminWhatsappRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/organizador/': {
       id: '/_authenticated/organizador/'
@@ -467,6 +563,23 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminIntegracoesRoute: typeof AuthenticatedAdminIntegracoesRoute
+  AuthenticatedAdminUsuariosRoute: typeof AuthenticatedAdminUsuariosRoute
+  AuthenticatedAdminWhatsappRoute: typeof AuthenticatedAdminWhatsappRoute
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+}
+
+const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminIntegracoesRoute: AuthenticatedAdminIntegracoesRoute,
+  AuthenticatedAdminUsuariosRoute: AuthenticatedAdminUsuariosRoute,
+  AuthenticatedAdminWhatsappRoute: AuthenticatedAdminWhatsappRoute,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+}
+
+const AuthenticatedAdminRouteWithChildren =
+  AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
+
 interface AuthenticatedOrganizadorRouteChildren {
   AuthenticatedOrganizadorIndexRoute: typeof AuthenticatedOrganizadorIndexRoute
   AuthenticatedOrganizadorEventosNovoRoute: typeof AuthenticatedOrganizadorEventosNovoRoute
@@ -494,6 +607,7 @@ const AuthenticatedOrganizadorRouteWithChildren =
   )
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRouteWithChildren
   AuthenticatedMeusIngressosRoute: typeof AuthenticatedMeusIngressosRoute
   AuthenticatedOrganizadorRoute: typeof AuthenticatedOrganizadorRouteWithChildren
   AuthenticatedPdvIndexRoute: typeof AuthenticatedPdvIndexRoute
@@ -507,6 +621,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRouteWithChildren,
   AuthenticatedMeusIngressosRoute: AuthenticatedMeusIngressosRoute,
   AuthenticatedOrganizadorRoute: AuthenticatedOrganizadorRouteWithChildren,
   AuthenticatedPdvIndexRoute: AuthenticatedPdvIndexRoute,
