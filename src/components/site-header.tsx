@@ -21,6 +21,9 @@ const ancoras = [
   { href: "#local", label: "Local" },
 ];
 
+/** Páginas próprias que ficam no menu em qualquer tela, não só na home. */
+const paginas = [{ to: "/patrocinadores", label: "Patrocinadores" }] as const;
+
 export function SiteHeader() {
   const { user } = useAuth();
   const { organizador, podeValidar, podeUsarPdv } = usePapeis();
@@ -47,9 +50,9 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        {naHome && (
-          <nav className="hidden items-center gap-1 lg:flex">
-            {ancoras.map((a) => (
+        <nav className="hidden items-center gap-1 lg:flex">
+          {naHome &&
+            ancoras.map((a) => (
               <a
                 key={a.href}
                 href={a.href}
@@ -58,8 +61,16 @@ export function SiteHeader() {
                 {a.label}
               </a>
             ))}
-          </nav>
-        )}
+          {paginas.map((p) => (
+            <Link
+              key={p.to}
+              to={p.to}
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground [&.active]:text-foreground"
+            >
+              {p.label}
+            </Link>
+          ))}
+        </nav>
 
         <div className="flex items-center gap-2">
           {naHome && (
