@@ -97,6 +97,50 @@ function useCountdown(targetISO: string) {
   return left;
 }
 
+/**
+ * Assinatura do patrocinador master no topo da home.
+ * A logo da Netvale é vertical (símbolo em cima, nome embaixo), por isso o
+ * "apresenta" fica abaixo dela e não ao lado — do jeito que se lê a frase
+ * inteira de cima para baixo: Netvale apresenta o Fest Vale Timóteo.
+ */
+function Apresenta() {
+  const a = FEST.apresenta;
+  if (!a.nome) return null;
+
+  const marca = a.logo ? (
+    <img
+      src={a.logo}
+      alt={a.nome}
+      className="h-[4.5rem] w-auto object-contain md:h-24"
+      width={190}
+      height={200}
+    />
+  ) : (
+    <span className="font-display text-2xl font-bold md:text-3xl">{a.nome}</span>
+  );
+
+  return (
+    <div className="mb-10 flex flex-col items-center gap-2">
+      {a.site ? (
+        <a
+          href={a.site}
+          target="_blank"
+          rel="noreferrer"
+          className="transition-opacity hover:opacity-80"
+          aria-label={`${a.nome} ${a.verbo} o ${FEST.edicaoLabel} do ${FEST.nome} ${FEST.cidade}`}
+        >
+          {marca}
+        </a>
+      ) : (
+        marca
+      )}
+      <span className="text-[11px] uppercase tracking-[0.35em] text-muted-foreground md:text-xs">
+        {a.verbo}
+      </span>
+    </div>
+  );
+}
+
 function Hero() {
   const left = useCountdown(FEST.dataISO);
 
@@ -111,6 +155,8 @@ function Hero() {
 
       <div className="container mx-auto px-4 py-20 md:py-28">
         <div className="mx-auto max-w-4xl text-center">
+          <Apresenta />
+
           {FEST.imagens.logo ? (
             <img
               src={FEST.imagens.logo}
@@ -572,15 +618,24 @@ function Patrocinadores() {
 
       {lista.length > 0 ? (
         <div className="mt-10 space-y-6">
-          {master.length > 0 && (
-            <LogoGrid titulo="Patrocínio master" itens={master} altura="h-24" colunas="sm:grid-cols-2" />
-          )}
+          {master.map((p) => (
+            <MasterCard key={p.nome} p={p} />
+          ))}
           {ouro.length > 0 && (
             <LogoGrid titulo="Patrocínio ouro" itens={ouro} altura="h-16" colunas="sm:grid-cols-3" />
           )}
           {apoio.length > 0 && (
             <LogoGrid titulo="Apoio" itens={apoio} altura="h-12" colunas="sm:grid-cols-4" />
           )}
+
+          <div className="text-center">
+            <Button variant="outline" asChild>
+              <Link to="/patrocinadores">
+                Conhecer todos os patrocinadores
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="mx-auto mt-10 max-w-3xl rounded-2xl border border-dashed border-border/70 bg-card/30 p-10 text-center">
@@ -605,6 +660,46 @@ function Patrocinadores() {
         )}
       </div>
     </section>
+  );
+}
+
+/** Cota master: card largo, logo grande e o texto da empresa ao lado. */
+function MasterCard({
+  p,
+}: {
+  p: { nome: string; logo?: string; site?: string; descricao?: string };
+}) {
+  const marca = p.logo ? (
+    <img src={p.logo} alt={p.nome} className="h-28 w-auto object-contain md:h-32" loading="lazy" />
+  ) : (
+    <span className="font-display text-3xl font-bold">{p.nome}</span>
+  );
+
+  return (
+    <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 to-transparent p-8">
+      <div className="mb-1 text-center text-xs font-medium uppercase tracking-[0.2em] text-primary">
+        Patrocínio master
+      </div>
+      <div className="mt-6 flex flex-col items-center gap-6 md:flex-row md:gap-10">
+        <div className="shrink-0">
+          {p.site ? (
+            <a href={p.site} target="_blank" rel="noreferrer" className="transition-opacity hover:opacity-80">
+              {marca}
+            </a>
+          ) : (
+            marca
+          )}
+        </div>
+        <div className="min-w-0 text-center md:text-left">
+          <h3 className="font-display text-2xl font-bold">
+            {p.nome} {FEST.apresenta.verbo} o {FEST.edicao}º {FEST.nome}
+          </h3>
+          {p.descricao && (
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{p.descricao}</p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
