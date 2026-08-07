@@ -27,9 +27,14 @@ export const FEST = {
 
   /** Data e hora de início. Horário provisório — confirmar. */
   dataISO: "2027-05-08T18:00:00-03:00",
+  /** Encerramento: 1h da manhã do dia seguinte. */
+  fimISO: "2027-05-09T01:00:00-03:00",
   dataLabel: "8 de maio de 2027",
   diaSemana: "sábado",
   horaLabel: "18h",
+  horaFimLabel: "1h",
+  /** Como o horário aparece por extenso nos textos do site. */
+  horarioLabel: "das 18h às 1h",
 
   realizador: {
     nome: "Loja Maçônica Acácia de Acesita",
@@ -341,19 +346,31 @@ export const FEST = {
   faq: [
     {
       p: "Quando e onde acontece?",
-      r: "No dia 8 de maio de 2027, a partir das 18h, na Área de Lazer Joaquim Augusto, bairro Santa Maria, em Timóteo (MG).",
+      r: "No dia 8 de maio de 2027, das 18h à 1h, na Área de Lazer Joaquim Augusto, bairro Santa Maria, em Timóteo (MG).",
     },
     {
       p: "Como recebo meu ingresso?",
-      r: "O ingresso é digital. Depois da compra ele fica disponível em 'Meus ingressos', com um QR Code que é lido na entrada do evento.",
+      r: "O ingresso é digital. Depois da compra ele chega no seu e-mail e também fica em 'Meus ingressos', com um QR Code que é lido na entrada do evento.",
     },
     {
       p: "Posso comprar para outras pessoas?",
-      r: "Pode. Na hora da compra você informa o nome de cada participante e cada ingresso recebe um QR Code próprio.",
+      r: "Pode. Cada ingresso recebe um QR Code próprio — é só encaminhar um para cada acompanhante.",
     },
     {
-      p: "Tem meia-entrada?",
-      r: "Sim, conforme a legislação. Leve o documento comprobatório para apresentar na entrada.",
+      p: "Criança paga?",
+      r: "Crianças de até 10 anos não pagam.",
+    },
+    {
+      p: "Dá para parcelar no cartão?",
+      r: "Dá. As taxas de parcelamento são repassadas a quem compra, e o valor de cada parcela aparece na tela antes de você confirmar.",
+    },
+    {
+      p: "Posso levar comida ou bebida?",
+      r: "Não é permitido entrar com comida nem bebida. Nada de vidro entra no evento. Teremos bar e praça de alimentação no local, e o consumo ajuda as ações sociais.",
+    },
+    {
+      p: "Tem estacionamento?",
+      r: "Não há estacionamento interno. As ruas ao redor têm vagas, e o trânsito da região terá fluxo especial no dia do evento.",
     },
   ],
 } as const;
