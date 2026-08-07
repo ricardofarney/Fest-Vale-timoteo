@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PatrocinadoresRouteImport } from './routes/patrocinadores'
 import { Route as AuthenticatedMeusIngressosRouteImport } from './routes/_authenticated/meus-ingressos'
 import { Route as AuthenticatedOrganizadorRouteImport } from './routes/_authenticated/organizador'
 import { Route as CheckoutOrderIdRouteImport } from './routes/checkout.$orderId'
@@ -48,6 +49,11 @@ const CadastroRoute = CadastroRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PatrocinadoresRoute = PatrocinadoresRouteImport.update({
+  id: '/patrocinadores',
+  path: '/patrocinadores',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedMeusIngressosRoute =
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/patrocinadores': typeof PatrocinadoresRoute
   '/meus-ingressos': typeof AuthenticatedMeusIngressosRoute
   '/organizador': typeof AuthenticatedOrganizadorRouteWithChildren
   '/checkout/$orderId': typeof CheckoutOrderIdRoute
@@ -176,6 +183,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/patrocinadores': typeof PatrocinadoresRoute
   '/meus-ingressos': typeof AuthenticatedMeusIngressosRoute
   '/checkout/$orderId': typeof CheckoutOrderIdRoute
   '/eventos/$slug': typeof EventosSlugRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
+  '/patrocinadores': typeof PatrocinadoresRoute
   '/_authenticated/meus-ingressos': typeof AuthenticatedMeusIngressosRoute
   '/_authenticated/organizador': typeof AuthenticatedOrganizadorRouteWithChildren
   '/checkout/$orderId': typeof CheckoutOrderIdRoute
@@ -223,6 +232,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/login'
+    | '/patrocinadores'
     | '/meus-ingressos'
     | '/organizador'
     | '/checkout/$orderId'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/'
     | '/cadastro'
     | '/login'
+    | '/patrocinadores'
     | '/meus-ingressos'
     | '/checkout/$orderId'
     | '/eventos/$slug'
@@ -267,6 +278,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/cadastro'
     | '/login'
+    | '/patrocinadores'
     | '/_authenticated/meus-ingressos'
     | '/_authenticated/organizador'
     | '/checkout/$orderId'
@@ -291,6 +303,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
+  PatrocinadoresRoute: typeof PatrocinadoresRoute
   CheckoutOrderIdRoute: typeof CheckoutOrderIdRoute
   EventosSlugRoute: typeof EventosSlugRoute
 }
@@ -323,6 +336,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/patrocinadores': {
+      id: '/patrocinadores'
+      path: '/patrocinadores'
+      fullPath: '/patrocinadores'
+      preLoaderRoute: typeof PatrocinadoresRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/meus-ingressos': {
@@ -509,6 +529,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
+  PatrocinadoresRoute: PatrocinadoresRoute,
   CheckoutOrderIdRoute: CheckoutOrderIdRoute,
   EventosSlugRoute: EventosSlugRoute,
 }
