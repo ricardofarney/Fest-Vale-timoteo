@@ -4,6 +4,19 @@
  * datas, atrações e imagens do site. Nada aqui é buscado no banco.
  */
 
+/** Cotas de patrocínio, da maior para a menor. A ordem aqui manda no site. */
+export const NIVEIS_PATROCINIO = ["master", "ouro", "prata", "bronze", "cobre"] as const;
+export type NivelPatrocinio = (typeof NIVEIS_PATROCINIO)[number];
+
+/** Como cada cota aparece: título da faixa e tamanho do logo. */
+export const NIVEL_INFO: Record<NivelPatrocinio, { titulo: string; altura: string; colunas: string }> = {
+  master: { titulo: "Patrocínio master", altura: "h-28", colunas: "sm:grid-cols-2" },
+  ouro:   { titulo: "Patrocínio ouro",   altura: "h-20", colunas: "sm:grid-cols-2 lg:grid-cols-3" },
+  prata:  { titulo: "Patrocínio prata",  altura: "h-16", colunas: "sm:grid-cols-3 lg:grid-cols-4" },
+  bronze: { titulo: "Patrocínio bronze", altura: "h-14", colunas: "sm:grid-cols-3 lg:grid-cols-4" },
+  cobre:  { titulo: "Patrocínio cobre",  altura: "h-12", colunas: "sm:grid-cols-4 lg:grid-cols-5" },
+};
+
 export const FEST = {
   nome: "Fest Vale",
   cidade: "Timóteo",
@@ -226,7 +239,7 @@ export const FEST = {
    * Patrocinadores e apoiadores. Adicione um item por empresa.
    * `logo` aceita caminho local (ex.: "/img/patrocinadores/empresa.png") ou URL.
    * Sem logo, o site desenha o nome da empresa em um card.
-   * Níveis: "master" (destaque grande), "ouro", "apoio".
+   * Níveis, do maior para o menor: "master", "ouro", "prata", "bronze", "cobre".
    * `descricao` só aparece na página /patrocinadores — é opcional.
    */
   patrocinadores: [
@@ -244,7 +257,7 @@ export const FEST = {
     nome: string;
     logo?: string;
     site?: string;
-    nivel: "master" | "ouro" | "apoio";
+    nivel: NivelPatrocinio;
     descricao?: string;
   }>,
 
@@ -263,13 +276,16 @@ export const FEST = {
       "O Fest Vale só existe porque empresas da região decidem colocar o nome delas em uma festa que devolve o resultado para a cidade. " +
       "A renda do evento sustenta as ações sociais mantidas pela Loja Maçônica Acácia de Acesita no Vale do Aço — " +
       "cada cota de patrocínio vira estrutura, e cada ingresso vendido vira trabalho social.",
-    /** O que cada cota entrega. Ajuste conforme fechar com a diretoria. */
+    /**
+     * O que cada cota entrega. PROPOSTA — conferir com a diretoria antes
+     * de usar como argumento de venda. Ordem: da maior para a menor.
+     */
     cotas: [
       {
         nome: "Master",
         resumo: "Assina o evento",
         itens: [
-          "Marca no topo do site, assinando o evento como \"apresenta\"",
+          "Marca ao lado da logo do festival no topo do site, assinando o evento",
           "Logo em destaque em toda a comunicação e no material impresso",
           "Espaço no palco e citação da locução durante o evento",
           "Exclusividade de segmento",
@@ -279,13 +295,31 @@ export const FEST = {
         nome: "Ouro",
         resumo: "Presença forte",
         itens: [
-          "Logo na página de patrocinadores e na seção da home",
+          "Logo em destaque na página de patrocinadores e na home",
+          "Marca em todo o material de divulgação",
+          "Citação da locução durante o evento",
+          "Espaço para ativação da marca no local",
+        ],
+      },
+      {
+        nome: "Prata",
+        resumo: "Boa visibilidade",
+        itens: [
+          "Logo na página de patrocinadores e na home",
           "Marca no material de divulgação",
           "Citação da locução durante o evento",
         ],
       },
       {
-        nome: "Apoio",
+        nome: "Bronze",
+        resumo: "Marca presente",
+        itens: [
+          "Logo na página de patrocinadores e na home",
+          "Menção nas redes sociais do evento",
+        ],
+      },
+      {
+        nome: "Cobre",
         resumo: "Apoio institucional",
         itens: [
           "Logo na página de patrocinadores",
