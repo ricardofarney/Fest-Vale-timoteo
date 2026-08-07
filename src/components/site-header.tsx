@@ -4,7 +4,7 @@ import { usePapeis } from "@/hooks/use-papeis";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { FEST } from "@/lib/fest";
-import { Ticket, LayoutDashboard, ScanLine, LogOut, ShoppingCart } from "lucide-react";
+import { Ticket, LayoutDashboard, ScanLine, LogOut, ShoppingCart, Gauge } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -96,6 +96,11 @@ export function SiteHeader() {
                 <DropdownMenuItem asChild>
                   <Link to="/meus-ingressos"><Ticket className="mr-2 h-4 w-4" />Meus ingressos</Link>
                 </DropdownMenuItem>
+                {organizador && (
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin"><Gauge className="mr-2 h-4 w-4" />Administração</Link>
+                  </DropdownMenuItem>
+                )}
                 {organizador && (
                   <DropdownMenuItem asChild>
                     <Link to="/organizador"><LayoutDashboard className="mr-2 h-4 w-4" />Painel do organizador</Link>
