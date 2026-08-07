@@ -684,6 +684,10 @@ export type Database = {
       wa_contatos: {
         Row: {
           bloqueado: boolean
+          nao_lidas: number
+          precisa_humano: boolean
+          ultima_mensagem: string | null
+          ultima_direcao: Database["public"]["Enums"]["wa_direcao"] | null
           dia_contador: string
           event_id: string
           humano_assumiu: boolean
@@ -697,6 +701,10 @@ export type Database = {
         }
         Insert: {
           bloqueado?: boolean
+          nao_lidas?: number
+          precisa_humano?: boolean
+          ultima_mensagem?: string | null
+          ultima_direcao?: Database["public"]["Enums"]["wa_direcao"] | null
           dia_contador?: string
           event_id: string
           humano_assumiu?: boolean
@@ -710,6 +718,10 @@ export type Database = {
         }
         Update: {
           bloqueado?: boolean
+          nao_lidas?: number
+          precisa_humano?: boolean
+          ultima_mensagem?: string | null
+          ultima_direcao?: Database["public"]["Enums"]["wa_direcao"] | null
           dia_contador?: string
           event_id?: string
           humano_assumiu?: boolean
@@ -724,6 +736,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "wa_contatos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wa_respostas_rapidas: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          ordem: number
+          texto: string
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          ordem?: number
+          texto: string
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          ordem?: number
+          texto?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wa_respostas_rapidas_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
@@ -823,6 +870,10 @@ export type Database = {
     Functions: {
       admin_usuarios: { Args: never; Returns: Json }
       admin_visao_geral: { Args: { _event_id: string }; Returns: Json }
+      wa_marcar_lida: {
+        Args: { _contato_id: string; _lida?: boolean }
+        Returns: undefined
+      }
       wa_pedidos_por_email: {
         Args: { _email: string; _event_id: string }
         Returns: Json
