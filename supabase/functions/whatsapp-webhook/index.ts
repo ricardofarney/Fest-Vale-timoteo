@@ -327,6 +327,13 @@ Deno.serve(async (req) => {
                 "Nenhum pedido pago nesse e-mail. Peça para a pessoa conferir se digitou certo " +
                 "ou se usou outro endereço na compra. Não confirme nem negue dados de terceiros.";
             } else {
+              // Confirmado que este e-mail comprou: guarda o vínculo para o
+              // painel mostrar os ingressos desta pessoa na tela de conversas.
+              await admin
+                .from("wa_contatos")
+                .update({ email_comprador: email })
+                .eq("id", contato.id);
+
               // Reenvia para o e-mail cadastrado — nunca para o WhatsApp
               const internalKey = Deno.env.get("INTERNAL_KEY");
               let enviados = 0;
