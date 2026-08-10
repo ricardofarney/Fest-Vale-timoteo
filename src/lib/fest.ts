@@ -366,7 +366,7 @@ export const FEST = {
     },
     {
       p: "Posso levar comida ou bebida?",
-      r: "Não é permitido entrar com comida nem bebida. Nada de vidro entra no evento. Teremos bar e praça de alimentação no local, e o consumo ajuda as ações sociais.",
+      r: "Não é permitido entrar com comida nem bebida. Copo térmico pode, desde que vazio — é só encher no bar. Nada de vidro entra no evento. Teremos bar e praça de alimentação no local, e o consumo ajuda as ações sociais.",
     },
     {
       p: "Tem estacionamento?",
