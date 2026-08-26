@@ -159,16 +159,16 @@ function CheckoutPage() {
       });
       if (erroReserva) throw new Error(erroReserva.message);
 
-      // 2. Cria a preferência no Mercado Pago e segue para o ambiente deles
-      const { data: pref, error: erroFn } = await supabase.functions.invoke("mp-criar-preferencia", {
+      // 2. Cria a cobrança no PagBank e segue para o ambiente deles
+      const { data: cobranca, error: erroFn } = await supabase.functions.invoke("pagbank-criar-checkout", {
         body: { order_id: orderId },
       });
       if (erroFn) {
-        const detalhe = (pref as { error?: string } | null)?.error;
+        const detalhe = (cobranca as { error?: string } | null)?.error;
         throw new Error(detalhe || "Não consegui abrir o pagamento. Tente de novo em instantes.");
       }
-      const destino = (pref as { init_point?: string })?.init_point;
-      if (!destino) throw new Error("O Mercado Pago não retornou o endereço de pagamento.");
+      const destino = (cobranca as { pay_url?: string })?.pay_url;
+      if (!destino) throw new Error("O PagBank não retornou o endereço de pagamento.");
 
       window.location.href = destino;
     } catch (e) {
