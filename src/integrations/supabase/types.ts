@@ -433,8 +433,8 @@ export type Database = {
           event_id: string
           expires_at: string
           id: string
-          mp_payment_id: string | null
-          mp_preference_id: string | null
+          payment_tx_id: string | null
+          payment_ref_id: string | null
           paid_at: string | null
           payment_method: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -454,8 +454,8 @@ export type Database = {
           event_id: string
           expires_at?: string
           id?: string
-          mp_payment_id?: string | null
-          mp_preference_id?: string | null
+          payment_tx_id?: string | null
+          payment_ref_id?: string | null
           paid_at?: string | null
           payment_method?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -467,8 +467,8 @@ export type Database = {
           buyer_email?: string | null
           buyer_id?: string
           buyer_name?: string | null
-          mp_payment_id?: string | null
-          mp_preference_id?: string | null
+          payment_tx_id?: string | null
+          payment_ref_id?: string | null
           stock_reserved?: boolean
           coupon_id?: string | null
           created_at?: string
