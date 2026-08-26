@@ -111,9 +111,9 @@ function Integracoes() {
         </p>
         <div className="mt-4 space-y-3">
           <Endereco
-            titulo="Webhook do Mercado Pago"
-            valor={data?.webhooks.mercado_pago ?? ""}
-            onde="Mercado Pago → Suas integrações → Webhooks"
+            titulo="Webhook do PagBank"
+            valor={data?.webhooks.pagbank ?? ""}
+            onde="O próprio sistema já envia este endereço a cada cobrança — serve para conferência"
           />
           <Endereco
             titulo="Webhook do WhatsApp"
