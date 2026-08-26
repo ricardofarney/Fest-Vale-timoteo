@@ -42,11 +42,12 @@ Deno.serve(async (req) => {
     const grupos = [
       {
         chave: "pagamento",
-        nome: "Pagamento — Mercado Pago",
+        nome: "Pagamento — PagBank",
         descricao: "Sem isto, a compra de ingresso pelo site não cobra de verdade.",
         itens: [
-          { nome: "MP_ACCESS_TOKEN", rotulo: "Token de acesso", ok: tem("MP_ACCESS_TOKEN") },
-          { nome: "MP_WEBHOOK_SECRET", rotulo: "Segredo do webhook", ok: tem("MP_WEBHOOK_SECRET") },
+          { nome: "PAGBANK_TOKEN", rotulo: "Token da conta", ok: tem("PAGBANK_TOKEN") },
+          { nome: "PAGBANK_AMBIENTE", rotulo: "Ambiente (sandbox/producao)", ok: tem("PAGBANK_AMBIENTE") },
+          { nome: "SITE_URL", rotulo: "Endereço do site", ok: tem("SITE_URL"), opcional: true },
         ],
       },
       {
@@ -90,7 +91,7 @@ Deno.serve(async (req) => {
     return json({
       grupos: resultado,
       webhooks: {
-        mercado_pago: `${SUPABASE_URL}/functions/v1/mp-webhook`,
+        pagbank: `${SUPABASE_URL}/functions/v1/pagbank-webhook`,
         whatsapp: `${SUPABASE_URL}/functions/v1/whatsapp-webhook`,
       },
       verificado_em: new Date().toISOString(),
