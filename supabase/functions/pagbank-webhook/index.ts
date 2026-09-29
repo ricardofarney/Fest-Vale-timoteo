@@ -22,8 +22,23 @@ const negado = () => new Response(JSON.stringify({ error: "assinatura inválida"
   headers: { "Content-Type": "application/json" },
 });
 
+/** Lê um segredo tolerando colagem desastrada.
+ *  É comum colar o NOME junto com o VALOR no painel do Supabase. Quando isso
+ *  acontece o valor vira "NOME\nvalor" e vai para um cabeçalho HTTP, que não
+ *  aceita quebra de linha — o erro que aparece é um TypeError obscuro.
+ *  Aqui pegamos a última linha não vazia e avisamos no log. */
+function segredo(nome: string): string {
+  const cru = Deno.env.get(nome) ?? "";
+  const linhas = cru.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+  if (linhas.length > 1) {
+    console.warn(`${nome}: o valor tem mais de uma linha — usando a última. ` +
+      `Provavelmente o nome foi colado junto com o valor no painel do Supabase.`);
+  }
+  return linhas.length ? linhas[linhas.length - 1] : "";
+}
+
 const ehSandbox = () => {
-  const amb = (Deno.env.get("PAGBANK_AMBIENTE") ?? "sandbox").trim().toLowerCase();
+  const amb = (segredo("PAGBANK_AMBIENTE") || "sandbox").toLowerCase();
   return !(amb === "producao" || amb === "produção" || amb === "production");
 };
 
@@ -74,7 +89,7 @@ Deno.serve(async (req) => {
   // O PagBank reenvia a notificação se não receber 200 rapidamente.
   // Por isso todo caminho de erro previsível também responde 200.
   try {
-    const TOKEN = Deno.env.get("PAGBANK_TOKEN");
+    const TOKEN = segredo("PAGBANK_TOKEN");
     if (!TOKEN) {
       console.error("webhook: PAGBANK_TOKEN ausente");
       return ok();
@@ -137,7 +152,7 @@ Deno.serve(async (req) => {
     console.log("webhook: pedido confirmado", orderId, resultado);
 
     // Dispara o e-mail do ingresso sem segurar a resposta ao PagBank
-    const internalKey = Deno.env.get("INTERNAL_KEY");
+    const internalKey = segredo("INTERNAL_KEY");
     if (internalKey) {
       fetch(`${SUPABASE_URL}/functions/v1/enviar-ingresso`, {
         method: "POST",
