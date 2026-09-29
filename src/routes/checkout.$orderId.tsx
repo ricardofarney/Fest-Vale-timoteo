@@ -39,10 +39,10 @@ function CheckoutPage() {
   const { retorno } = Route.useSearch();
   const { user } = useAuth();
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["order", orderId],
     queryFn: () => fetchOrder(orderId),
-    // Depois de voltar do Mercado Pago o pedido leva alguns segundos para virar "pago":
+    // Depois de voltar do PagBank o pedido leva alguns segundos para virar "pago":
     // quem confirma é o webhook, não o navegador.
     refetchInterval: (q) => {
       const status = (q.state.data as { order?: { status?: string } } | undefined)?.order?.status;
@@ -91,7 +91,42 @@ function CheckoutPage() {
     return () => clearInterval(t);
   }, [data?.order?.expires_at]);
 
-  if (isLoading || !data) return <div className="container mx-auto px-4 py-16">Carregando...</div>;
+  if (isLoading) {
+    return (
+      <div className="container mx-auto max-w-md px-4 py-16 text-center">
+        <Loader2 className="mx-auto h-10 w-10 animate-spin text-muted-foreground" />
+        <p className="mt-4 text-sm text-muted-foreground">Carregando seu pedido...</p>
+      </div>
+    );
+  }
+
+  // Sem isto a tela ficava em "Carregando..." para sempre quando a consulta
+  // falhava — que é o que acontece, por exemplo, com a sessão expirada.
+  if (isError || !data) {
+    const semSessao = !user;
+    return (
+      <div className="container mx-auto max-w-md px-4 py-16 text-center">
+        <AlertTriangle className="mx-auto h-12 w-12 text-destructive" />
+        <h1 className="mt-5 font-display text-2xl font-bold">
+          {semSessao ? "Entre para ver este pedido" : "Não consegui abrir este pedido"}
+        </h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {semSessao
+            ? "Este pedido é da sua conta. Faça login e abra este endereço de novo."
+            : "Ou o pedido não existe mais, ou ele pertence a outra conta."}
+        </p>
+        {error instanceof Error && (
+          <p className="mt-2 text-xs text-muted-foreground/70">{error.message}</p>
+        )}
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {semSessao
+            ? <Button asChild size="lg"><Link to="/login">Entrar</Link></Button>
+            : <Button size="lg" onClick={() => refetch()}>Tentar de novo</Button>}
+          <Button asChild variant="outline" size="lg"><Link to="/">Voltar ao início</Link></Button>
+        </div>
+      </div>
+    );
+  }
 
   const { order, items } = data;
 
@@ -111,7 +146,7 @@ function CheckoutPage() {
     );
   }
 
-  /* ------------------------- Voltou do Mercado Pago, aguardando o webhook */
+  /* ----------------------------- Voltou do PagBank, aguardando o webhook */
   if (retorno === "sucesso" || retorno === "pendente") {
     return (
       <div className="container mx-auto max-w-md px-4 py-16 text-center">
@@ -121,7 +156,7 @@ function CheckoutPage() {
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
           {retorno === "pendente"
-            ? "Boleto e alguns cartões levam mais tempo para compensar. Assim que o Mercado Pago confirmar, seu ingresso chega por e-mail automaticamente."
+            ? "Boleto e alguns cartões levam mais tempo para compensar. Assim que o PagBank confirmar, seu ingresso chega por e-mail automaticamente."
             : "Isso costuma levar poucos segundos. Pode deixar esta página aberta — ela se atualiza sozinha."}
         </p>
         <p className="mt-6 text-xs text-muted-foreground">
@@ -302,13 +337,13 @@ function CheckoutPage() {
           </div>
 
           <Button className="mt-4 w-full" size="lg" onClick={irParaPagamento} disabled={enviando || expired}>
-            {enviando ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Abrindo o Mercado Pago...</> : "Pagar com Mercado Pago"}
+            {enviando ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Abrindo o PagBank...</> : "Pagar com PagBank"}
           </Button>
 
           <div className="mt-4 space-y-2 text-xs text-muted-foreground">
             <p className="flex items-start gap-2">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              Pix, cartão e boleto são processados dentro do Mercado Pago. Nenhum dado de pagamento passa por este site.
+              Pix, cartão e boleto são processados dentro do PagBank. Nenhum dado de pagamento passa por este site.
             </p>
             <p className="flex items-start gap-2">
               <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
