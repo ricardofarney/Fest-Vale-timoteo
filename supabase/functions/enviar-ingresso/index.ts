@@ -1,6 +1,6 @@
 // Envia por e-mail os ingressos de um pedido pago, com o QR Code de cada um.
 //
-// Chamado pelo webhook do Mercado Pago (cabeçalho x-internal-key) ou pelo
+// Chamado pelo webhook do PagBank (cabeçalho x-internal-key) ou pelo
 // painel do organizador para reenviar (Authorization do usuário organizador).
 //
 // Segredos: BREVO_API_KEY, INTERNAL_KEY, EMAIL_REMETENTE, EMAIL_REMETENTE_NOME, SITE_URL
@@ -13,6 +13,21 @@ const CORS = {
 };
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
+
+/** Lê um segredo tolerando colagem desastrada.
+ *  É comum colar o NOME junto com o VALOR no painel do Supabase. Quando isso
+ *  acontece o valor vira "NOME\nvalor" e vai para um cabeçalho HTTP, que não
+ *  aceita quebra de linha — o erro que aparece é um TypeError obscuro.
+ *  Aqui pegamos a última linha não vazia e avisamos no log. */
+function segredo(nome: string): string {
+  const cru = Deno.env.get(nome) ?? "";
+  const linhas = cru.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+  if (linhas.length > 1) {
+    console.warn(`${nome}: o valor tem mais de uma linha — usando a última. ` +
+      `Provavelmente o nome foi colado junto com o valor no painel do Supabase.`);
+  }
+  return linhas.length ? linhas[linhas.length - 1] : "";
+}
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -31,13 +46,13 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
   try {
-    const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY");
+    const BREVO_API_KEY = segredo("BREVO_API_KEY");
     if (!BREVO_API_KEY) return json({ error: "BREVO_API_KEY não configurado no Supabase." }, 503);
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://www.festvaletimoteo.com.br").replace(/\/$/, "");
-    const REMETENTE = Deno.env.get("EMAIL_REMETENTE") ?? "ingresso@festvaletimoteo.com.br";
-    const REMETENTE_NOME = Deno.env.get("EMAIL_REMETENTE_NOME") ?? "Fest Vale Timóteo";
+    const REMETENTE = segredo("EMAIL_REMETENTE") || "ingresso@festvaletimoteo.com.br";
+    const REMETENTE_NOME = segredo("EMAIL_REMETENTE_NOME") || "Fest Vale Timóteo";
 
     const admin = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
@@ -45,7 +60,7 @@ Deno.serve(async (req) => {
     if (!order_id) return json({ error: "order_id é obrigatório" }, 400);
 
     // Autorização: chave interna (webhook) ou organizador do evento
-    const internalKey = Deno.env.get("INTERNAL_KEY");
+    const internalKey = segredo("INTERNAL_KEY");
     const veioDoWebhook = !!internalKey && req.headers.get("x-internal-key") === internalKey;
 
     const { data: order } = await admin
@@ -74,7 +89,7 @@ Deno.serve(async (req) => {
     const destino = order.buyer_email;
     if (!destino) return json({ error: "Pedido sem e-mail de contato" }, 400);
 
-    // Não reenviar sozinho: o webhook do MP repete a notificação
+    // Não reenviar sozinho: o webhook do PagBank repete a notificação
     if (!reenviar) {
       const { data: jaEnviado } = await admin
         .from("ticket_emails")
@@ -173,7 +188,7 @@ Deno.serve(async (req) => {
 
     <tr><td style="padding:16px 4px 0 4px;border-top:1px solid #e0e0e0;">
       <div style="font:400 12px/1.7 Arial,sans-serif;color:#8a8a8a;">
-        Pedido ${esc(String(order.id).slice(0, 8))} &middot; ${esc(brl(order.total_cents))} &middot; pago pelo Mercado Pago.<br>
+        Pedido ${esc(String(order.id).slice(0, 8))} &middot; ${esc(brl(order.total_cents))} &middot; pago pelo PagBank.<br>
         Cada QR Code vale uma entrada e é lido uma única vez. Guarde este e-mail.<br>
         ${ev?.address ? `${esc(ev.address)}<br>` : ""}
         Dúvidas? Responda esta mensagem.
