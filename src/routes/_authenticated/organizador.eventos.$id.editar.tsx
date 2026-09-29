@@ -9,7 +9,22 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { brl } from "@/lib/format";
-import { Plus, Trash2, ExternalLink } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Ban } from "lucide-react";
+
+/** O Postgres recusa apagar algo que ainda está preso a um pedido. A mensagem
+ *  dele é técnica demais para quem organiza o evento. */
+function traduzErro(error: { message: string; code?: string }): string {
+  const fk = error.code === "23503" || /foreign key|violates/i.test(error.message);
+  if (fk) {
+    return "Não dá para apagar: existe pedido ligado a este item. " +
+      "Encerre o lote para parar a venda — assim o histórico de quem já comprou continua valendo.";
+  }
+  return error.message;
+}
+
+/** Lote com data de encerramento já passada. */
+const encerrado = (b: { ends_at?: string | null }) =>
+  !!b.ends_at && new Date(b.ends_at) <= new Date();
 
 export const Route = createFileRoute("/_authenticated/organizador/eventos/$id/editar")({
   component: EditEvent,
@@ -143,10 +158,23 @@ function TicketTypesPanel({ eventId, types, onChange }: { eventId: string; types
     onChange();
   };
 
-  const removeType = async (id: string) => {
-    if (!confirm("Remover este tipo e todos os lotes?")) return;
-    const { error } = await supabase.from("ticket_types").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+  const removeType = async (t: any) => {
+    // Apagar um tipo apaga os lotes dele. Se algum lote já vendeu, isso
+    // arrebentaria os pedidos de quem comprou — o banco recusa, e antes o
+    // organizador via a mensagem crua do Postgres.
+    const vendidos = (t.ticket_batches ?? [])
+      .reduce((soma: number, b: any) => soma + (b.quantity_sold ?? 0), 0);
+    if (vendidos > 0) {
+      return toast.error(
+        `"${t.name}" já tem ${vendidos} ingresso(s) vendido(s) e não pode ser apagado — ` +
+        `os pedidos de quem comprou ficariam sem referência. Encerre os lotes para parar a venda.`,
+        { duration: 9000 },
+      );
+    }
+    if (!confirm(`Remover o tipo "${t.name}" e os lotes dele? Não há nenhuma venda.`)) return;
+    const { error } = await supabase.from("ticket_types").delete().eq("id", t.id);
+    if (error) return toast.error(traduzErro(error));
+    toast.success("Tipo removido");
     onChange();
   };
 
@@ -170,7 +198,7 @@ function TicketTypesPanel({ eventId, types, onChange }: { eventId: string; types
               <div>
                 <div className="font-semibold">{t.name} {t.is_half_price && <span className="ml-2 rounded bg-accent/20 px-2 py-0.5 text-xs text-accent">meia</span>}</div>
               </div>
-              <Button size="icon" variant="ghost" onClick={() => removeType(t.id)}><Trash2 className="h-4 w-4" /></Button>
+              <Button size="icon" variant="ghost" onClick={() => removeType(t)}><Trash2 className="h-4 w-4" /></Button>
             </div>
             <BatchesEditor typeId={t.id} batches={t.ticket_batches ?? []} onChange={onChange} />
           </div>
@@ -198,9 +226,29 @@ function BatchesEditor({ typeId, batches, onChange }: { typeId: string; batches:
     onChange();
   };
 
-  const removeBatch = async (id: string) => {
-    const { error } = await supabase.from("ticket_batches").delete().eq("id", id);
-    if (error) return toast.error(error.message);
+  /** Para a venda sem destruir o histórico: é o que se quer em 9 de 10 casos. */
+  const encerrarBatch = async (b: any) => {
+    const { error } = await supabase
+      .from("ticket_batches")
+      .update({ ends_at: new Date().toISOString() })
+      .eq("id", b.id);
+    if (error) return toast.error(traduzErro(error));
+    toast.success(`"${b.name}" encerrado. Ele para de vender e o histórico continua.`);
+    onChange();
+  };
+
+  const removeBatch = async (b: any) => {
+    if ((b.quantity_sold ?? 0) > 0) {
+      return toast.error(
+        `"${b.name}" já vendeu ${b.quantity_sold} ingresso(s) e não pode ser apagado — ` +
+        `os pedidos de quem comprou ficariam sem referência. Use "Encerrar" para parar a venda.`,
+        { duration: 9000 },
+      );
+    }
+    if (!confirm(`Apagar o lote "${b.name}"? Ele não tem nenhuma venda.`)) return;
+    const { error } = await supabase.from("ticket_batches").delete().eq("id", b.id);
+    if (error) return toast.error(traduzErro(error));
+    toast.success("Lote apagado");
     onChange();
   };
 
@@ -212,7 +260,18 @@ function BatchesEditor({ typeId, batches, onChange }: { typeId: string; batches:
           <span className="text-primary">{brl(b.price_cents)}</span>
           <span className="text-muted-foreground">{b.quantity_sold}/{b.quantity_total} vendidos</span>
           {b.ends_at && <span className="text-xs text-muted-foreground">até {new Date(b.ends_at).toLocaleString("pt-BR")}</span>}
-          <Button size="icon" variant="ghost" className="ml-auto h-7 w-7" onClick={() => removeBatch(b.id)}><Trash2 className="h-3 w-3" /></Button>
+          <div className="ml-auto flex items-center gap-1">
+            {!encerrado(b) && (
+              <Button size="icon" variant="ghost" className="h-7 w-7" title="Encerrar a venda deste lote"
+                      onClick={() => encerrarBatch(b)}>
+                <Ban className="h-3 w-3" />
+              </Button>
+            )}
+            <Button size="icon" variant="ghost" className="h-7 w-7" title="Apagar o lote"
+                    onClick={() => removeBatch(b)}>
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
         </div>
       ))}
       <div className="flex flex-wrap items-end gap-2 pt-2">
