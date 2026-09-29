@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { brl } from "@/lib/format";
-import { Plus, Trash2, ExternalLink, Ban } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Ban, RotateCcw } from "lucide-react";
 
 /** O Postgres recusa apagar algo que ainda está preso a um pedido. A mensagem
  *  dele é técnica demais para quem organiza o evento. */
@@ -21,6 +21,11 @@ function traduzErro(error: { message: string; code?: string }): string {
   }
   return error.message;
 }
+
+/** Dois lotes podem se chamar "1º lote" no mesmo evento. Sem o preço junto,
+ *  não dá para saber de qual a mensagem está falando. */
+const rotulo = (b: { name: string; price_cents: number }) =>
+  `"${b.name} — ${brl(b.price_cents)}"`;
 
 /** Lote com data de encerramento já passada. */
 const encerrado = (b: { ends_at?: string | null }) =>
@@ -233,19 +238,30 @@ function BatchesEditor({ typeId, batches, onChange }: { typeId: string; batches:
       .update({ ends_at: new Date().toISOString() })
       .eq("id", b.id);
     if (error) return toast.error(traduzErro(error));
-    toast.success(`"${b.name}" encerrado. Ele para de vender e o histórico continua.`);
+    toast.success(`${rotulo(b)} encerrado. Ele para de vender e o histórico continua.`);
+    onChange();
+  };
+
+  /** Desfaz um encerramento feito por engano. */
+  const reabrirBatch = async (b: any) => {
+    const { error } = await supabase
+      .from("ticket_batches")
+      .update({ ends_at: null })
+      .eq("id", b.id);
+    if (error) return toast.error(traduzErro(error));
+    toast.success(`"${rotulo(b)}" voltou a vender.`);
     onChange();
   };
 
   const removeBatch = async (b: any) => {
     if ((b.quantity_sold ?? 0) > 0) {
       return toast.error(
-        `"${b.name}" já vendeu ${b.quantity_sold} ingresso(s) e não pode ser apagado — ` +
+        `${rotulo(b)} já vendeu ${b.quantity_sold} ingresso(s) e não pode ser apagado — ` +
         `os pedidos de quem comprou ficariam sem referência. Use "Encerrar" para parar a venda.`,
         { duration: 9000 },
       );
     }
-    if (!confirm(`Apagar o lote "${b.name}"? Ele não tem nenhuma venda.`)) return;
+    if (!confirm(`Apagar ${rotulo(b)}? Ele não tem nenhuma venda.`)) return;
     const { error } = await supabase.from("ticket_batches").delete().eq("id", b.id);
     if (error) return toast.error(traduzErro(error));
     toast.success("Lote apagado");
@@ -260,8 +276,18 @@ function BatchesEditor({ typeId, batches, onChange }: { typeId: string; batches:
           <span className="text-primary">{brl(b.price_cents)}</span>
           <span className="text-muted-foreground">{b.quantity_sold}/{b.quantity_total} vendidos</span>
           {b.ends_at && <span className="text-xs text-muted-foreground">até {new Date(b.ends_at).toLocaleString("pt-BR")}</span>}
+          {encerrado(b) && (
+            <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+              encerrado — não está vendendo
+            </span>
+          )}
           <div className="ml-auto flex items-center gap-1">
-            {!encerrado(b) && (
+            {encerrado(b) ? (
+              <Button size="icon" variant="ghost" className="h-7 w-7" title="Voltar a vender este lote"
+                      onClick={() => reabrirBatch(b)}>
+                <RotateCcw className="h-3 w-3" />
+              </Button>
+            ) : (
               <Button size="icon" variant="ghost" className="h-7 w-7" title="Encerrar a venda deste lote"
                       onClick={() => encerrarBatch(b)}>
                 <Ban className="h-3 w-3" />
