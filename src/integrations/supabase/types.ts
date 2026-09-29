@@ -344,6 +344,7 @@ export type Database = {
           ends_at: string | null
           id: string
           name: string
+          modo_teste: boolean
           organizer_id: string
           slug: string
           starts_at: string
@@ -359,6 +360,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           name: string
+          modo_teste?: boolean
           organizer_id: string
           slug: string
           starts_at: string
@@ -374,6 +376,7 @@ export type Database = {
           ends_at?: string | null
           id?: string
           name?: string
+          modo_teste?: boolean
           organizer_id?: string
           slug?: string
           starts_at?: string
@@ -900,6 +903,18 @@ export type Database = {
       }
       event_checkin_stats: { Args: { _event_id: string }; Returns: Json }
       pode_vender: { Args: { _event_id: string; _user_id?: string }; Returns: boolean }
+      excluir_lote_em_teste: {
+        Args: { _batch_id: string }
+        Returns: Json
+      }
+      excluir_tipo_em_teste: {
+        Args: { _type_id: string }
+        Returns: Json
+      }
+      resumo_exclusao_lote: {
+        Args: { _batch_id: string }
+        Returns: Json
+      }
       pode_gerenciar_evento: { Args: { _event_id: string; _user_id?: string }; Returns: boolean }
       is_master: { Args: { _user_id?: string }; Returns: boolean }
       pos_sangria: {
