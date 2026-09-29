@@ -23,9 +23,24 @@ const json = (body: unknown, status = 200) =>
     headers: { ...CORS, "Content-Type": "application/json" },
   });
 
+/** Lê um segredo tolerando colagem desastrada.
+ *  É comum colar o NOME junto com o VALOR no painel do Supabase. Quando isso
+ *  acontece o valor vira "NOME\nvalor" e vai para um cabeçalho HTTP, que não
+ *  aceita quebra de linha — o erro que aparece é um TypeError obscuro.
+ *  Aqui pegamos a última linha não vazia e avisamos no log. */
+function segredo(nome: string): string {
+  const cru = Deno.env.get(nome) ?? "";
+  const linhas = cru.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+  if (linhas.length > 1) {
+    console.warn(`${nome}: o valor tem mais de uma linha — usando a última. ` +
+      `Provavelmente o nome foi colado junto com o valor no painel do Supabase.`);
+  }
+  return linhas.length ? linhas[linhas.length - 1] : "";
+}
+
 /** Endereço da API conforme o ambiente configurado. */
 function baseApi(): string {
-  const amb = (Deno.env.get("PAGBANK_AMBIENTE") ?? "sandbox").trim().toLowerCase();
+  const amb = (segredo("PAGBANK_AMBIENTE") || "sandbox").toLowerCase();
   return amb === "producao" || amb === "produção" || amb === "production"
     ? "https://api.pagseguro.com"
     : "https://sandbox.api.pagseguro.com";
@@ -42,11 +57,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
   try {
-    const TOKEN = Deno.env.get("PAGBANK_TOKEN");
+    const TOKEN = segredo("PAGBANK_TOKEN");
     if (!TOKEN) {
       return json({ error: "PAGBANK_TOKEN não configurado no Supabase." }, 503);
     }
-    const SITE_URL = (Deno.env.get("SITE_URL") ?? "https://www.festvaletimoteo.com.br").replace(/\/$/, "");
+    const SITE_URL = (segredo("SITE_URL") || "https://www.festvaletimoteo.com.br").replace(/\/$/, "");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const API = baseApi();
 
