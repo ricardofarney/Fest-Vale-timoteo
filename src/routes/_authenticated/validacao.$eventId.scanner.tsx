@@ -19,13 +19,25 @@ type ScanResult = {
   type?: string;
   batch?: string;
   checked_in_at?: string;
+  lido_em?: string;
 };
+
+/** Enquanto o mesmo QR continuar na frente da câmera, ele é lido de novo várias
+ *  vezes por segundo. Sem uma trava longa, a segunda leitura volta como
+ *  "já utilizado" e apaga o verde da primeira — o conferente vê o aviso amarelo
+ *  e acha que a entrada não foi validada, quando na verdade foi.
+ *  A trava vale até chegar um código diferente, ou até a pessoa tocar em
+ *  "Ler o próximo". */
+const TRAVA_MESMO_CODIGO_MS = 90_000;
 
 function Scanner() {
   const { eventId } = Route.useParams();
   const containerId = "qr-reader";
   const scannerRef = useRef<any>(null);
   const lastScanRef = useRef<{ token: string; at: number }>({ token: "", at: 0 });
+  // Evita duas validações simultâneas do mesmo código enquanto a primeira
+  // ainda está indo e voltando do servidor.
+  const ocupadoRef = useRef(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [online, setOnline] = useState(typeof navigator !== "undefined" ? navigator.onLine : true);
   const [pending, setPending] = useState(0);
@@ -102,28 +114,45 @@ function Scanner() {
   useEffect(() => { return () => { stopScanner(); }; // eslint-disable-next-line
   }, []);
 
-  const handleScan = async (token: string) => {
-    // debounce duplicate reads within 2.5s
-    const now = Date.now();
-    if (token === lastScanRef.current.token && now - lastScanRef.current.at < 2500) return;
-    lastScanRef.current = { token, at: now };
+  /** Libera a leitura do próximo ingresso e limpa o resultado da tela. */
+  const lerProximo = () => {
+    lastScanRef.current = { token: "", at: 0 };
+    setResult(null);
+  };
 
-    if (!navigator.onLine) {
-      await enqueueScan({ qr_token: token, event_id: eventId, device_id: deviceId(), scanned_at: new Date().toISOString() });
-      setPending((p) => p + 1);
-      setResult({ status: "queued", message: "Sem conexão — validação salva para enviar depois" });
-      return;
+  const handleScan = async (token: string) => {
+    const now = Date.now();
+
+    // O mesmo código parado na frente da câmera não é lido de novo.
+    if (token === lastScanRef.current.token && now - lastScanRef.current.at < TRAVA_MESMO_CODIGO_MS) return;
+    if (ocupadoRef.current) return;
+
+    ocupadoRef.current = true;
+    lastScanRef.current = { token, at: now };
+    const lido_em = new Date().toLocaleTimeString("pt-BR");
+
+    try {
+      if (!navigator.onLine) {
+        await enqueueScan({ qr_token: token, event_id: eventId, device_id: deviceId(), scanned_at: new Date().toISOString() });
+        setPending((p) => p + 1);
+        setResult({ status: "queued", message: "Sem conexão — validação salva para enviar depois", lido_em });
+        return;
+      }
+      const { data, error } = await supabase.rpc("validate_ticket", {
+        _qr_token: token,
+        _event_id: eventId,
+        _device_id: deviceId(),
+      });
+      if (error) {
+        // Deu erro de rede ou de permissão: solta a trava para poder tentar de novo.
+        lastScanRef.current = { token: "", at: 0 };
+        setResult({ status: "error", message: error.message, lido_em });
+        return;
+      }
+      setResult({ ...(data as ScanResult), lido_em });
+    } finally {
+      ocupadoRef.current = false;
     }
-    const { data, error } = await supabase.rpc("validate_ticket", {
-      _qr_token: token,
-      _event_id: eventId,
-      _device_id: deviceId(),
-    });
-    if (error) {
-      setResult({ status: "error", message: error.message });
-      return;
-    }
-    setResult(data as ScanResult);
   };
 
   const syncNow = async () => {
@@ -174,7 +203,24 @@ function Scanner() {
         </div>
       </Card>
 
-      {result && <ResultBanner result={result} />}
+      {result ? (
+        <>
+          <ResultBanner result={result} />
+          <Button variant="outline" className="mt-3 w-full" onClick={lerProximo}>
+            Ler o próximo
+          </Button>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Pode apontar direto para o próximo ingresso — este botão é só se você quiser ler o
+            mesmo código de novo.
+          </p>
+        </>
+      ) : (
+        running && (
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            Aponte a câmera para o QR Code do ingresso.
+          </p>
+        )
+      )}
     </div>
   );
 }
@@ -197,6 +243,7 @@ function ResultBanner({ result }: { result: ScanResult }) {
           <div className="font-display text-lg font-bold">{result.message}</div>
           {result.attendee_name && <div className="text-sm">{result.attendee_name}{result.type ? ` — ${result.type}` : ""}{result.batch ? ` / ${result.batch}` : ""}</div>}
           {result.checked_in_at && <div className="text-xs opacity-80">Entrada anterior em {new Date(result.checked_in_at).toLocaleString("pt-BR")}</div>}
+          {result.lido_em && <div className="text-xs opacity-70">Lido às {result.lido_em}</div>}
         </div>
       </div>
     </div>
