@@ -142,10 +142,20 @@ Deno.serve(async (req) => {
             </td>
           </tr>
           <tr>
-            <td align="center" style="padding:0 22px 20px 22px;">
+            <td align="center" style="padding:0 22px 12px 22px;">
               <div style="font:400 12px/1.5 Arial,sans-serif;color:#888888;">
                 Código: ${esc(String(t.qr_token))}
               </div>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:0 22px 20px 22px;">
+              <a href="${SUPABASE_URL}/functions/v1/ingresso-pdf?t=${t.qr_token}"
+                 style="display:inline-block;border:1px solid #d0d0d0;border-radius:8px;
+                        color:#333333;text-decoration:none;font:600 13px/1 Arial,sans-serif;
+                        padding:11px 18px;">
+                Baixar este ingresso em PDF
+              </a>
             </td>
           </tr>
         </table>
@@ -205,7 +215,8 @@ Deno.serve(async (req) => {
       ev?.venue ?? "",
       "",
       ...tickets.map((t: Record<string, unknown>, i: number) =>
-        `Ingresso ${i + 1}: ${(t.attendee_name as string) || order.buyer_name || "Participante"} — código ${t.qr_token}`),
+        `Ingresso ${i + 1}: ${(t.attendee_name as string) || order.buyer_name || "Participante"} — código ${t.qr_token}\n` +
+        `PDF: ${SUPABASE_URL}/functions/v1/ingresso-pdf?t=${t.qr_token}`),
       "",
       `Veja os QR Codes em ${SITE_URL}/meus-ingressos`,
     ].join("\n");
