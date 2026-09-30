@@ -193,7 +193,20 @@ function Scanner() {
       </div>
 
       <Card className="overflow-hidden">
-        <div id={containerId} className="relative aspect-square w-full bg-black" />
+        {/* O resultado fica POR CIMA do vídeo. Antes ele aparecia abaixo da
+            câmera e, no celular, caía fora da tela: a leitura dava certo e o
+            conferente não via nada acontecer. */}
+        <div className="relative aspect-square w-full bg-black">
+          <div id={containerId} className="absolute inset-0" />
+          {result && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-black/60 p-4 text-center backdrop-blur-sm">
+              <ResultBanner result={result} />
+              <Button size="lg" variant="secondary" className="w-full" onClick={lerProximo}>
+                Ler o próximo
+              </Button>
+            </div>
+          )}
+        </div>
         <div className="border-t border-border/60 p-3">
           {running ? (
             <Button variant="outline" className="w-full" onClick={stopScanner}>Parar câmera</Button>
@@ -203,49 +216,73 @@ function Scanner() {
         </div>
       </Card>
 
-      {result ? (
-        <>
-          <ResultBanner result={result} />
-          <Button variant="outline" className="mt-3 w-full" onClick={lerProximo}>
-            Ler o próximo
-          </Button>
-          <p className="mt-2 text-center text-xs text-muted-foreground">
-            Pode apontar direto para o próximo ingresso — este botão é só se você quiser ler o
-            mesmo código de novo.
-          </p>
-        </>
-      ) : (
-        running && (
-          <p className="mt-4 text-center text-sm text-muted-foreground">
-            Aponte a câmera para o QR Code do ingresso.
-          </p>
-        )
+      {!result && running && (
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Aponte a câmera para o QR Code do ingresso.
+        </p>
       )}
     </div>
   );
 }
 
 function ResultBanner({ result }: { result: ScanResult }) {
+  // Na portaria, de noite, com fila andando: o veredito precisa ser lido de
+  // longe e sem dúvida. Cor cheia, uma palavra grande, o resto pequeno.
   const style = {
-    ok: { bg: "bg-success/15 border-success/40", text: "text-success", Icon: CheckCircle2 },
-    duplicate: { bg: "bg-accent/15 border-accent/40", text: "text-accent", Icon: AlertTriangle },
-    cancelled: { bg: "bg-destructive/15 border-destructive/40", text: "text-destructive", Icon: XCircle },
-    invalid: { bg: "bg-destructive/15 border-destructive/40", text: "text-destructive", Icon: XCircle },
-    queued: { bg: "bg-accent/15 border-accent/40", text: "text-accent", Icon: AlertTriangle },
-    error: { bg: "bg-destructive/15 border-destructive/40", text: "text-destructive", Icon: XCircle },
+    ok: {
+      fundo: "bg-emerald-600", titulo: "ENTRADA LIBERADA",
+      sub: "Ingresso validado", Icon: CheckCircle2,
+    },
+    duplicate: {
+      fundo: "bg-amber-500", titulo: "JÁ UTILIZADO",
+      sub: "Este ingresso já passou pela entrada", Icon: AlertTriangle,
+    },
+    cancelled: {
+      fundo: "bg-red-600", titulo: "CANCELADO",
+      sub: "Não libere a entrada", Icon: XCircle,
+    },
+    invalid: {
+      fundo: "bg-red-600", titulo: "INVÁLIDO",
+      sub: "Este código não é de um ingresso deste evento", Icon: XCircle,
+    },
+    queued: {
+      fundo: "bg-sky-600", titulo: "SEM CONEXÃO",
+      sub: "Leitura guardada — será enviada quando a internet voltar", Icon: AlertTriangle,
+    },
+    error: {
+      fundo: "bg-red-600", titulo: "ERRO",
+      sub: "Tente ler de novo", Icon: XCircle,
+    },
   }[result.status];
   const Icon = style.Icon;
+
   return (
-    <div className={`mt-4 rounded-xl border p-5 ${style.bg}`}>
-      <div className={`flex items-center gap-3 ${style.text}`}>
-        <Icon className="h-7 w-7" />
-        <div>
-          <div className="font-display text-lg font-bold">{result.message}</div>
-          {result.attendee_name && <div className="text-sm">{result.attendee_name}{result.type ? ` — ${result.type}` : ""}{result.batch ? ` / ${result.batch}` : ""}</div>}
-          {result.checked_in_at && <div className="text-xs opacity-80">Entrada anterior em {new Date(result.checked_in_at).toLocaleString("pt-BR")}</div>}
-          {result.lido_em && <div className="text-xs opacity-70">Lido às {result.lido_em}</div>}
-        </div>
+    <div className={`flex w-full flex-col items-center gap-3 rounded-2xl px-5 py-7 text-white shadow-2xl ${style.fundo}`}>
+      <Icon className="h-20 w-20" strokeWidth={2.5} />
+      <div className="font-display text-3xl font-extrabold leading-none tracking-tight sm:text-4xl">
+        {style.titulo}
       </div>
+
+      {result.attendee_name && (
+        <div className="text-xl font-semibold leading-tight">{result.attendee_name}</div>
+      )}
+      {(result.type || result.batch) && (
+        <div className="text-sm opacity-90">
+          {result.type}{result.batch ? ` · ${result.batch}` : ""}
+        </div>
+      )}
+
+      <div className="text-sm opacity-90">{style.sub}</div>
+
+      {result.checked_in_at && (
+        <div className="text-xs opacity-80">
+          Entrada anterior em {new Date(result.checked_in_at).toLocaleString("pt-BR")}
+        </div>
+      )}
+      {result.status === "error" && (
+        <div className="text-xs opacity-80">{result.message}</div>
+      )}
+      {result.lido_em && <div className="text-xs opacity-75">Lido às {result.lido_em}</div>}
     </div>
   );
 }
