@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { FEST, absUrl, NIVEIS_PATROCINIO, NIVEL_INFO } from "@/lib/fest";
+import { BotaoWhatsapp } from "@/components/botao-whatsapp";
 import { ArrowLeft, Check, Handshake, Ticket } from "lucide-react";
 
 export const Route = createFileRoute("/patrocinadores")({
@@ -34,7 +35,7 @@ function PaginaPatrocinadores() {
   const whatsapp: string = FEST.contato.whatsapp;
   const email: string = FEST.contato.email;
   const contato = whatsapp
-    ? `https://wa.me/${whatsapp.replace(/\D/g, "")}`
+    ? `https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(FEST.whatsappMensagens.patrocinio)}`
     : email
       ? `mailto:${email}?subject=Patroc%C3%ADnio%20Fest%20Vale`
       : null;
@@ -157,7 +158,8 @@ function PaginaPatrocinadores() {
           </div>
         </section>
       </div>
-    </div>
+      <BotaoWhatsapp />
+  </div>
   );
 }
 

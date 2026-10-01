@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { FEST, mapsUrl, NIVEIS_PATROCINIO, NIVEL_INFO } from "@/lib/fest";
+import { BotaoWhatsapp, LinkWhatsapp } from "@/components/botao-whatsapp";
 import { brl } from "@/lib/format";
 import {
   ArrowRight,
@@ -14,6 +15,8 @@ import {
   Handshake,
   Globe,
   Instagram,
+  Mail,
+  MessageCircle,
   Music4,
   Newspaper,
   QrCode,
@@ -68,6 +71,7 @@ function HomePage() {
       <LocalEData />
       <Faq />
       <Footer />
+      <BotaoWhatsapp />
     </div>
   );
 }
@@ -614,7 +618,7 @@ function Patrocinadores() {
   const whatsapp: string = FEST.contato.whatsapp;
   const email: string = FEST.contato.email;
   const contato = whatsapp
-    ? `https://wa.me/${whatsapp.replace(/\D/g, "")}`
+    ? `https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(FEST.whatsappMensagens.patrocinio)}`
     : email
       ? `mailto:${email}?subject=Patroc%C3%ADnio%20Fest%20Vale`
       : null;
@@ -840,11 +844,70 @@ function Faq() {
           </details>
         ))}
       </div>
+
+      <FaqContato />
     </section>
   );
 }
 
+/** Saída para quem não achou a resposta. Some quando não há WhatsApp cadastrado. */
+function FaqContato() {
+  const whatsapp: string = FEST.contato.whatsapp;
+  if (!whatsapp) return null;
+  return (
+    <div className="mx-auto mt-6 max-w-3xl text-center">
+      <p className="text-sm text-muted-foreground">Não encontrou o que procurava?</p>
+      <LinkWhatsapp
+        mensagem={FEST.whatsappMensagens.ingresso}
+        className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#25D366] px-5 py-3 font-semibold text-white transition-transform hover:scale-105"
+      >
+        <MessageCircle className="h-4 w-4" />Perguntar no WhatsApp
+      </LinkWhatsapp>
+    </div>
+  );
+}
+
 /* -------------------------------------------------------------- Rodapé */
+
+/** Formas de falar com a organização. Cada uma só aparece se estiver preenchida. */
+function Contato() {
+  const email: string = FEST.contato.email;
+  const instagram: string = FEST.contato.instagram;
+  const whatsapp: string = FEST.contato.whatsapp;
+  const temAlgum = !!whatsapp || !!email || !!instagram;
+  if (!temAlgum) return null;
+
+  return (
+    <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
+      <LinkWhatsapp
+        mensagem={FEST.whatsappMensagens.geral}
+        className="inline-flex items-center gap-2 rounded-full bg-[#25D366] px-4 py-2 text-sm font-semibold text-white transition-transform hover:scale-105"
+      >
+        <MessageCircle className="h-4 w-4" />WhatsApp
+      </LinkWhatsapp>
+
+      {email && (
+        <a
+          href={`mailto:${email}`}
+          className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Mail className="h-4 w-4" />{email}
+        </a>
+      )}
+
+      {instagram && (
+        <a
+          href={`https://instagram.com/${instagram.replace(/^@/, "")}`}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 rounded-full border border-border/60 px-4 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Instagram className="h-4 w-4" />@{instagram.replace(/^@/, "")}
+        </a>
+      )}
+    </div>
+  );
+}
 
 function Footer() {
   return (
@@ -860,6 +923,8 @@ function Footer() {
           <p className="max-w-md text-sm text-muted-foreground">
             Realização {FEST.realizador.nome} — {FEST.realizador.cidade}
           </p>
+          <Contato />
+
           <div className="mt-4 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <a href="#ingressos" className="hover:text-foreground">Ingressos</a>
             <a href="#atracoes" className="hover:text-foreground">Atrações</a>
