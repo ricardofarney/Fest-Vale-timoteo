@@ -16,9 +16,18 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminLayout,
 });
 
+// A aba de WhatsApp está fora do menu de propósito.
+//
+// O atendimento passou a ser por LINK: o site abre a conversa no aplicativo e
+// quem responde é uma pessoa. Não usamos a API oficial da Meta, por causa do
+// custo por mensagem. A tela de conversas e as funções continuam no
+// repositório, paradas e sem custo, caso um dia o volume justifique ligar a
+// API — mas deixar a aba no menu levaria a uma tela que nunca recebe nada.
+//
+// Para voltar a exibir, basta devolver esta linha à lista:
+//   { to: "/admin/whatsapp", label: "WhatsApp", icone: MessageCircle, exato: false },
 const abas = [
   { to: "/admin", label: "Visão geral", icone: Gauge, exato: true },
-  { to: "/admin/whatsapp", label: "WhatsApp", icone: MessageCircle, exato: false },
   { to: "/admin/integracoes", label: "Integrações", icone: Plug, exato: false },
   { to: "/admin/usuarios", label: "Usuários", icone: Users, exato: false },
 ] as const;
