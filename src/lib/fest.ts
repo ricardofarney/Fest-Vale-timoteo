@@ -66,8 +66,26 @@ export const FEST = {
 
   contato: {
     email: "",
+    /**
+     * Número do WhatsApp do evento, com país e DDD: "5531999999999".
+     * Enquanto estiver vazio, o botão flutuante e os links de contato
+     * simplesmente não aparecem — nada quebra.
+     *
+     * Não usamos a API oficial da Meta: o site só abre a conversa no
+     * aplicativo, com uma mensagem já escrita. O atendimento é humano.
+     */
     whatsapp: "",
     instagram: "",
+  },
+
+  /**
+   * Mensagem que já vem digitada quando a pessoa abre o WhatsApp pelo site.
+   * Serve para o atendente saber de onde a pessoa veio sem precisar perguntar.
+   */
+  whatsappMensagens: {
+    geral: "Olá! Vim pelo site do Fest Vale Timóteo e queria tirar uma dúvida.",
+    ingresso: "Olá! Vim pelo site do Fest Vale e tenho uma dúvida sobre ingressos.",
+    patrocinio: "Olá! Vim pelo site do Fest Vale e quero falar sobre patrocínio.",
   },
 
   /**
@@ -381,3 +399,15 @@ export const absUrl = (path: string) =>
 
 export const mapsUrl = (query: string) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+
+/**
+ * Monta o endereço que abre a conversa no WhatsApp com a mensagem pronta.
+ * Devolve null quando o número ainda não foi cadastrado — quem chama usa isso
+ * para simplesmente não desenhar o botão, em vez de deixar um link quebrado.
+ */
+export function linkWhatsapp(mensagem?: string): string | null {
+  const numero = FEST.contato.whatsapp.replace(/\D/g, "");
+  if (!numero) return null;
+  const texto = mensagem ?? FEST.whatsappMensagens.geral;
+  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
