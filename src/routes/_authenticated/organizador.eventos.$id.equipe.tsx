@@ -16,12 +16,14 @@ export const Route = createFileRoute("/_authenticated/organizador/eventos/$id/eq
   component: EquipePage,
 });
 
-type Cargo = "organizador" | "caixa" | "portaria";
+type Cargo = "organizador" | "financeiro" | "caixa" | "portaria";
 type Credencial = { email: string; senha: string | null; conta_nova: boolean; cargo: Cargo };
 
 const CARGOS: { id: Cargo; nome: string; resumo: string }[] = [
   { id: "organizador", nome: "Organizador",
     resumo: "Tudo do evento: cadastra usuários e produtos, dá entrada em estoque, autoriza cortesia e sangria, vê os relatórios." },
+  { id: "financeiro", nome: "Financeiro",
+    resumo: "Pelo celular, na Gestão do dia: acompanha o dinheiro de cada caixa, autoriza sangria, cortesia e abertura de caixa com o PIN dele e confere os envelopes no fim. Não mexe em estoque." },
   { id: "caixa", nome: "Caixa",
     resumo: "Vende no PDV — produtos e ingresso na portaria — e entrega no balcão. Não vê relatório nem mexe em estoque." },
   { id: "portaria", nome: "Equipe de portaria",
@@ -29,7 +31,7 @@ const CARGOS: { id: Cargo; nome: string; resumo: string }[] = [
 ];
 
 const ROTULO_CARGO: Record<Cargo, string> = {
-  organizador: "Organizador", caixa: "Caixa", portaria: "Portaria",
+  organizador: "Organizador", financeiro: "Financeiro", caixa: "Caixa", portaria: "Portaria",
 };
 
 function EquipePage() {
@@ -174,7 +176,9 @@ function EquipePage() {
                   (credencial.senha ? `Senha: ${credencial.senha}\n` : "") +
                   (credencial.cargo === "portaria"
                     ? `Depois de entrar, abra o menu e toque em "Validação na entrada".`
-                    : `Depois de entrar, abra o menu e toque em "PDV do evento".`),
+                    : credencial.cargo === "financeiro"
+                      ? `Depois de entrar, abra o menu, toque em "PDV do evento" e depois em "Gestão do dia".`
+                      : `Depois de entrar, abra o menu e toque em "PDV do evento".`),
                 )
               }
             >

@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { fmtDateTime } from "@/lib/format";
-import { ShoppingCart, Boxes, ScanLine, BarChart3, Calendar, FlaskConical, Ticket } from "lucide-react";
+import { ShoppingCart, Boxes, ScanLine, BarChart3, Calendar, FlaskConical, Ticket, Gauge } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pdv/")({
   head: () => ({ meta: [{ title: "PDV — Fest Vale Timóteo" }] }),
@@ -21,14 +21,14 @@ function PdvHome() {
     queryFn: async () => {
       const [proprios, equipe] = await Promise.all([
         supabase.from("events").select("id, name, starts_at, venue").eq("organizer_id", user!.id),
-        supabase.from("event_staff").select("events(id, name, starts_at, venue)").eq("user_id", user!.id),
+        supabase.from("event_staff").select("cargo, events(id, name, starts_at, venue)").eq("user_id", user!.id),
       ]);
-      type Ev = { id: string; name: string; starts_at: string; venue: string | null };
+      type Ev = { id: string; name: string; starts_at: string; venue: string | null; cargo: string };
       const porId = new Map<string, Ev>();
-      for (const ev of (proprios.data ?? []) as Ev[]) porId.set(ev.id, ev);
+      for (const ev of (proprios.data ?? []) as Omit<Ev, "cargo">[]) porId.set(ev.id, { ...ev, cargo: "organizador" });
       for (const linha of equipe.data ?? []) {
-        const ev = (linha as { events: Ev | null }).events;
-        if (ev) porId.set(ev.id, ev);
+        const l = linha as unknown as { cargo: string; events: Omit<Ev, "cargo"> | null };
+        if (l.events && !porId.has(l.events.id)) porId.set(l.events.id, { ...l.events, cargo: l.cargo });
       }
       return [...porId.values()].sort((a, b) => a.starts_at.localeCompare(b.starts_at));
     },
@@ -44,9 +44,9 @@ function PdvHome() {
       <div className="mt-6 flex items-start gap-3 rounded-xl border border-primary/40 bg-primary/10 px-4 py-3">
         <FlaskConical className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         <p className="text-sm">
-          <span className="font-semibold">Modo demonstração.</span> A maquininha ainda não está conectada:
-          cartão e Pix registram a venda sem cobrar de verdade. Todo o resto — estoque, cortesia,
-          ticket e relatório — já funciona de verdade.
+          <span className="font-semibold">As vendas do dia são feitas nas maquininhas.</span> Quem comanda o
+          evento (organizador e financeiro) acompanha tudo pelo celular em "Gestão do dia". As telas de venda
+          abaixo continuam disponíveis para testes no navegador.
         </p>
       </div>
 
@@ -68,13 +68,22 @@ function PdvHome() {
               {ev.venue && <span>• {ev.venue}</span>}
             </div>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-2">
-              <Button asChild size="lg" className="justify-start">
+            {(ev.cargo === "organizador" || ev.cargo === "financeiro") && (
+              <Button asChild size="lg" className="mt-5 w-full justify-start">
+                <Link to="/pdv/$eventId/gestao" params={{ eventId: ev.id }}>
+                  <Gauge className="mr-2 h-5 w-5" />Gestão do dia
+                </Link>
+              </Button>
+            )}
+
+            {ev.cargo !== "financeiro" && (
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <Button asChild size="lg" variant="outline" className="justify-start">
                 <Link to="/pdv/$eventId/caixa" params={{ eventId: ev.id }}>
                   <ShoppingCart className="mr-2 h-5 w-5" />Vender produtos
                 </Link>
               </Button>
-              <Button asChild size="lg" className="justify-start">
+              <Button asChild size="lg" variant="outline" className="justify-start">
                 <Link to="/pdv/$eventId/ingressos" params={{ eventId: ev.id }}>
                   <Ticket className="mr-2 h-5 w-5" />Vender ingresso
                 </Link>
@@ -95,6 +104,7 @@ function PdvHome() {
                 </Link>
               </Button>
             </div>
+            )}
           </Card>
         ))}
       </div>
