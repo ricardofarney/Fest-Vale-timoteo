@@ -305,7 +305,11 @@ function AbaAgora({ p, irPara }: { p: Painel; irPara: (a: Aba) => void }) {
           {baixos.length > 0 && (
             <button onClick={() => irPara("estoque")} className="flex w-full items-start gap-2 rounded-lg border border-primary/50 bg-primary/10 px-3 py-2 text-left text-sm">
               <Boxes className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-              <span><span className="font-semibold">Estoque baixo:</span> {baixos.map((x) => `${x.nome} (${x.estoque})`).join(" · ")}</span>
+              <span>
+                <span className="font-semibold">Estoque baixo em {baixos.length} {baixos.length === 1 ? "item" : "itens"}:</span>{" "}
+                {[...baixos].sort((a, b) => a.estoque - b.estoque).slice(0, 4).map((x) => `${x.nome} (${x.estoque})`).join(" · ")}
+                {baixos.length > 4 && ` · e mais ${baixos.length - 4}`}
+              </span>
             </button>
           )}
           {fechadosSemConferir > 0 && (
