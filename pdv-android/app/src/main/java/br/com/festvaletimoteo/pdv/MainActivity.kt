@@ -27,10 +27,12 @@ import kotlin.concurrent.thread
  * ambiente, SDK, ADB, pinpad e impressora — antes de investir semanas
  * construindo a venda de bar de verdade.
  *
- * São três botões, na ordem em que devem ser apertados:
- *   1. Ativar o terminal     (código de teste 749879)
- *   2. Cobrar R$ 1,00        (transação SIMULADA, não movimenta dinheiro)
- *   3. Imprimir um comprovante
+ * Os botões, na ordem em que devem ser apertados:
+ *   1. Ativar o terminal      (código de teste 749879)
+ *   2. Cobrar R$ 1,00 crédito (transação SIMULADA, não movimenta dinheiro)
+ *   3. Cobrar R$ 1,00 débito  (idem — serve para descobrir qual função o
+ *                              ambiente de teste aceita)
+ *   4. Imprimir um comprovante
  *
  * Tudo que acontece é escrito na tela, inclusive os erros, para não ser
  * preciso ligar o computador para saber o que deu errado.
@@ -61,7 +63,8 @@ class MainActivity : AppCompatActivity() {
         escrever("As transações aqui são simuladas: nada é cobrado de verdade.")
 
         findViewById<Button>(R.id.btAtivar).setOnClickListener { ativar() }
-        findViewById<Button>(R.id.btCobrar).setOnClickListener { cobrar() }
+        findViewById<Button>(R.id.btCobrar).setOnClickListener { cobrar(PlugPag.TYPE_CREDITO, "crédito") }
+        findViewById<Button>(R.id.btCobrarDebito).setOnClickListener { cobrar(PlugPag.TYPE_DEBITO, "débito") }
         findViewById<Button>(R.id.btImprimir).setOnClickListener { imprimir() }
     }
 
@@ -76,6 +79,14 @@ class MainActivity : AppCompatActivity() {
             )
             if (r.result == PlugPag.RET_OK) {
                 escrever("Terminal ativado.")
+                // Modelo e número de série do aparelho. Serve para saber qual
+                // maquininha fez cada venda e para fechar o minSdk do projeto.
+                try {
+                    escrever("Modelo: ${plugPag.model}")
+                    escrever("Série:  ${plugPag.serialNumber}")
+                } catch (e: Throwable) {
+                    escrever("(não consegui ler modelo/série: ${e.message})")
+                }
             } else {
                 escrever("Não ativou. Código devolvido: ${r.result}")
                 escrever("Confira em Informações de sistema > Suporte se o " +
@@ -86,25 +97,38 @@ class MainActivity : AppCompatActivity() {
 
     /* ----------------------------------------------------------- 2. cobrar */
 
-    private fun cobrar() {
-        escrever("\n— Cobrando R$ 1,00 (simulado). Siga as instruções na tela do terminal...")
+    private fun cobrar(tipo: Int, rotulo: String) {
+        escrever("\n— Cobrando R$ 1,00 no $rotulo (simulado). Siga as instruções na maquininha...")
         emSegundoPlano("cobrar") {
-            val dados = PlugPagPaymentData(
-                PlugPag.TYPE_CREDITO,
-                100,                               // sempre em centavos: 100 = R$ 1,00
-                PlugPag.INSTALLMENT_TYPE_A_VISTA,
-                1,
-                "PROVA-FESTVALE",
-            )
-            val r = plugPag.doPayment(dados)
-            if (r.result == PlugPag.RET_OK) {
-                escrever("Pagamento aprovado.")
-                escrever("Mensagem: ${r.message}")
-                escrever("Código da transação: ${r.transactionCode}")
-                escrever("NSU: ${r.transactionId}")
+            // Se a cobrança anterior ficou pendurada esperando cartão, a próxima
+            // morre com um erro obscuro. Melhor dizer isso em português.
+            val ocupado = try { plugPag.isServiceBusy } catch (e: Throwable) { false }
+            if (ocupado) {
+                escrever("O terminal ainda está ocupado com a cobrança anterior.")
+                escrever("Feche o aplicativo por completo e abra de novo.")
             } else {
-                escrever("Pagamento não aprovado. Código: ${r.result}")
-                escrever("Mensagem: ${r.message}")
+                val dados = PlugPagPaymentData(
+                    tipo,
+                    100,                           // sempre em centavos: 100 = R$ 1,00
+                    PlugPag.INSTALLMENT_TYPE_A_VISTA,
+                    1,
+                    "PROVA-FESTVALE",
+                )
+                val r = plugPag.doPayment(dados)
+                if (r.result == PlugPag.RET_OK) {
+                    escrever("PAGAMENTO APROVADO no $rotulo.")
+                    escrever("  bandeira: ${r.cardBrand}")
+                    escrever("  NSU: ${r.transactionId}")
+                    escrever("  código da transação: ${r.transactionCode}")
+                } else {
+                    // Tudo que o SDK devolveu: é o que diz se o problema é o
+                    // cartão, a função escolhida ou o ambiente de teste.
+                    escrever("Não aprovado no $rotulo.")
+                    escrever("  código: ${r.result}")
+                    escrever("  erro:   ${r.errorCode}")
+                    escrever("  mensagem: ${r.message}")
+                    escrever("  bandeira lida: ${r.cardBrand}")
+                }
             }
         }
     }
