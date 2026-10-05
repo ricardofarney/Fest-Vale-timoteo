@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/use-auth";
  *   ainda não criou o primeiro evento nunca enxerga o painel para criá-lo)
  * - caixa: opera o PDV — produtos e ingresso na portaria
  * - portaria: valida o QR dos ingressos na entrada
+ * - financeiro: acompanha caixas, confere envelopes e autoriza sangria e
+ *   cortesia — pelo celular, em "Gestão do dia" no PDV
  */
 export function usePapeis() {
   const { user, loading: carregandoAuth } = useAuth();
@@ -36,6 +38,7 @@ export function usePapeis() {
         portaria: master || cargos.includes("portaria") || cargos.includes("organizador"),
         // Quem opera o PDV
         caixa: master || cargos.includes("caixa") || cargos.includes("organizador"),
+        financeiro: cargos.includes("financeiro"),
       };
     },
   });
@@ -45,9 +48,11 @@ export function usePapeis() {
     organizador: data?.organizador ?? false,
     portaria: data?.portaria ?? false,
     caixa: data?.caixa ?? false,
+    financeiro: data?.financeiro ?? false,
     podeValidar: (data?.organizador ?? false) || (data?.portaria ?? false),
     // Caixa e portaria entram no PDV; a portaria só usa o balcão de retirada
-    podeUsarPdv: (data?.organizador ?? false) || (data?.caixa ?? false),
+    // O financeiro entra no PDV só pela "Gestão do dia"
+    podeUsarPdv: (data?.organizador ?? false) || (data?.caixa ?? false) || (data?.financeiro ?? false),
     loading: carregandoAuth || isLoading,
   };
 }
