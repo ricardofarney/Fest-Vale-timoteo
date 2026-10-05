@@ -33,6 +33,12 @@
         android:text="@string/bt_cobrar" />
 
     <Button
+        android:id="@+id/btCobrarDebito"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/bt_cobrar_debito" />
+
+    <Button
         android:id="@+id/btImprimir"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
