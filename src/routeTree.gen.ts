@@ -29,6 +29,7 @@ import { Route as AuthenticatedValidacaoIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedOrganizadorEventosNovoRouteImport } from './routes/_authenticated/organizador.eventos.novo'
 import { Route as AuthenticatedPdvEventIdCaixaRouteImport } from './routes/_authenticated/pdv.$eventId.caixa'
 import { Route as AuthenticatedPdvEventIdEstoqueRouteImport } from './routes/_authenticated/pdv.$eventId.estoque'
+import { Route as AuthenticatedPdvEventIdGestaoRouteImport } from './routes/_authenticated/pdv.$eventId.gestao'
 import { Route as AuthenticatedPdvEventIdIngressosRouteImport } from './routes/_authenticated/pdv.$eventId.ingressos'
 import { Route as AuthenticatedPdvEventIdRelatorioRouteImport } from './routes/_authenticated/pdv.$eventId.relatorio'
 import { Route as AuthenticatedPdvEventIdRetiradaRouteImport } from './routes/_authenticated/pdv.$eventId.retirada'
@@ -146,6 +147,12 @@ const AuthenticatedPdvEventIdEstoqueRoute =
     path: '/pdv/$eventId/estoque',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedPdvEventIdGestaoRoute =
+  AuthenticatedPdvEventIdGestaoRouteImport.update({
+    id: '/pdv/$eventId/gestao',
+    path: '/pdv/$eventId/gestao',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPdvEventIdIngressosRoute =
   AuthenticatedPdvEventIdIngressosRouteImport.update({
     id: '/pdv/$eventId/ingressos',
@@ -209,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/organizador/eventos/novo': typeof AuthenticatedOrganizadorEventosNovoRoute
   '/pdv/$eventId/caixa': typeof AuthenticatedPdvEventIdCaixaRoute
   '/pdv/$eventId/estoque': typeof AuthenticatedPdvEventIdEstoqueRoute
+  '/pdv/$eventId/gestao': typeof AuthenticatedPdvEventIdGestaoRoute
   '/pdv/$eventId/ingressos': typeof AuthenticatedPdvEventIdIngressosRoute
   '/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
   '/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
@@ -235,6 +243,7 @@ export interface FileRoutesByTo {
   '/organizador/eventos/novo': typeof AuthenticatedOrganizadorEventosNovoRoute
   '/pdv/$eventId/caixa': typeof AuthenticatedPdvEventIdCaixaRoute
   '/pdv/$eventId/estoque': typeof AuthenticatedPdvEventIdEstoqueRoute
+  '/pdv/$eventId/gestao': typeof AuthenticatedPdvEventIdGestaoRoute
   '/pdv/$eventId/ingressos': typeof AuthenticatedPdvEventIdIngressosRoute
   '/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
   '/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
@@ -265,6 +274,7 @@ export interface FileRoutesById {
   '/_authenticated/organizador/eventos/novo': typeof AuthenticatedOrganizadorEventosNovoRoute
   '/_authenticated/pdv/$eventId/caixa': typeof AuthenticatedPdvEventIdCaixaRoute
   '/_authenticated/pdv/$eventId/estoque': typeof AuthenticatedPdvEventIdEstoqueRoute
+  '/_authenticated/pdv/$eventId/gestao': typeof AuthenticatedPdvEventIdGestaoRoute
   '/_authenticated/pdv/$eventId/ingressos': typeof AuthenticatedPdvEventIdIngressosRoute
   '/_authenticated/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
   '/_authenticated/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/organizador/eventos/novo'
     | '/pdv/$eventId/caixa'
     | '/pdv/$eventId/estoque'
+    | '/pdv/$eventId/gestao'
     | '/pdv/$eventId/ingressos'
     | '/pdv/$eventId/relatorio'
     | '/pdv/$eventId/retirada'
@@ -321,6 +332,7 @@ export interface FileRouteTypes {
     | '/organizador/eventos/novo'
     | '/pdv/$eventId/caixa'
     | '/pdv/$eventId/estoque'
+    | '/pdv/$eventId/gestao'
     | '/pdv/$eventId/ingressos'
     | '/pdv/$eventId/relatorio'
     | '/pdv/$eventId/retirada'
@@ -350,6 +362,7 @@ export interface FileRouteTypes {
     | '/_authenticated/organizador/eventos/novo'
     | '/_authenticated/pdv/$eventId/caixa'
     | '/_authenticated/pdv/$eventId/estoque'
+    | '/_authenticated/pdv/$eventId/gestao'
     | '/_authenticated/pdv/$eventId/ingressos'
     | '/_authenticated/pdv/$eventId/relatorio'
     | '/_authenticated/pdv/$eventId/retirada'
@@ -511,6 +524,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPdvEventIdEstoqueRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/pdv/$eventId/gestao': {
+      id: '/_authenticated/pdv/$eventId/gestao'
+      path: '/pdv/$eventId/gestao'
+      fullPath: '/pdv/$eventId/gestao'
+      preLoaderRoute: typeof AuthenticatedPdvEventIdGestaoRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/pdv/$eventId/ingressos': {
       id: '/_authenticated/pdv/$eventId/ingressos'
       path: '/pdv/$eventId/ingressos'
@@ -614,6 +634,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedValidacaoIndexRoute: typeof AuthenticatedValidacaoIndexRoute
   AuthenticatedPdvEventIdCaixaRoute: typeof AuthenticatedPdvEventIdCaixaRoute
   AuthenticatedPdvEventIdEstoqueRoute: typeof AuthenticatedPdvEventIdEstoqueRoute
+  AuthenticatedPdvEventIdGestaoRoute: typeof AuthenticatedPdvEventIdGestaoRoute
   AuthenticatedPdvEventIdIngressosRoute: typeof AuthenticatedPdvEventIdIngressosRoute
   AuthenticatedPdvEventIdRelatorioRoute: typeof AuthenticatedPdvEventIdRelatorioRoute
   AuthenticatedPdvEventIdRetiradaRoute: typeof AuthenticatedPdvEventIdRetiradaRoute
@@ -628,6 +649,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedValidacaoIndexRoute: AuthenticatedValidacaoIndexRoute,
   AuthenticatedPdvEventIdCaixaRoute: AuthenticatedPdvEventIdCaixaRoute,
   AuthenticatedPdvEventIdEstoqueRoute: AuthenticatedPdvEventIdEstoqueRoute,
+  AuthenticatedPdvEventIdGestaoRoute: AuthenticatedPdvEventIdGestaoRoute,
   AuthenticatedPdvEventIdIngressosRoute: AuthenticatedPdvEventIdIngressosRoute,
   AuthenticatedPdvEventIdRelatorioRoute: AuthenticatedPdvEventIdRelatorioRoute,
   AuthenticatedPdvEventIdRetiradaRoute: AuthenticatedPdvEventIdRetiradaRoute,
