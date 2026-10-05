@@ -1,0 +1,51 @@
+name: PDV Android (APK de teste)
+
+# Compila o aplicativo do PDV e deixa o APK pronto para baixar.
+#
+# Por que isto existe: o ambiente onde o Claude trabalha não alcança os
+# repositórios do Android nem o Maven, então o APK não pode ser gerado lá.
+# Aqui no GitHub o SDK já vem instalado. O fluxo fica:
+#   Claude escreve e publica  ->  GitHub compila  ->  Ricardo baixa e instala
+#
+# Como pegar o APK:
+#   aba Actions -> abra a execução mais recente -> seção Artifacts -> "pdv-apk"
+#
+# Só roda quando algo dentro de pdv-android/ muda, para não disparar a cada
+# alteração do site.
+
+on:
+  push:
+    paths:
+      - "pdv-android/**"
+      - ".github/workflows/pdv-android.yml"
+  workflow_dispatch:   # permite rodar na mão pelo botão "Run workflow"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar o Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Preparar o Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Compilar o APK
+        working-directory: pdv-android
+        run: gradle assembleDebug --stacktrace
+
+      - name: Guardar o APK para download
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdv-apk
+          path: pdv-android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
