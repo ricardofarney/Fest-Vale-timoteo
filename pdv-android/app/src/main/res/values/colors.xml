@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fundo do icone adaptativo: a mesma cor do anel escuro da logo,
+         para o circulo nao destoar do quadro que o Android desenha atras. -->
+    <color name="ic_launcher_background">#2F3031</color>
+</resources>
