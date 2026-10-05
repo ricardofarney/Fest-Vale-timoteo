@@ -11,6 +11,27 @@ android {
     namespace = "br.com.festvaletimoteo.pdv"
     compileSdk = 34
 
+    // Chave FIXA para as versões de teste.
+    //
+    // Sem isto, cada compilação no GitHub gera uma chave nova ao acaso, o
+    // Android vê duas assinaturas diferentes e recusa a instalação por cima
+    // com INSTALL_FAILED_UPDATE_INCOMPATIBLE — obrigando a desinstalar o
+    // aplicativo a cada versão. Com a chave guardada no repositório, o
+    // `adb install -r` passa a funcionar sempre.
+    //
+    // Esta chave é só de teste e não protege nada: a senha "android" é a
+    // mesma que o Android usa por padrão no mundo inteiro. A chave de
+    // RELEASE, que vai para a homologação, é outra história — essa não pode
+    // ser guardada aqui, e perdê-la custa 7 dias úteis de nova homologação.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("../chaves/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     defaultConfig {
         applicationId = "br.com.festvaletimoteo.pdv"
 
