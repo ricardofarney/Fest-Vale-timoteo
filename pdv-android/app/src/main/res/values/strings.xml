@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fest Vale PDV</string>
+    <string name="titulo">Fest Vale — prova do terminal</string>
+    <string name="subtitulo">Transações simuladas. Nada é cobrado de verdade.</string>
+    <string name="bt_ativar">1. Ativar o terminal</string>
+    <string name="bt_cobrar">2. Cobrar R$ 1,00</string>
+    <string name="bt_imprimir">3. Imprimir comprovante</string>
+</resources>
