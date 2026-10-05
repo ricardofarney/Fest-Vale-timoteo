@@ -68,4 +68,7 @@ dependencies {
 
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
+
+    // QR code da ficha de retirada e do relatório de fechamento
+    implementation("com.google.zxing:core:3.5.3")
 }
