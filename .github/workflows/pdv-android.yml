@@ -10,15 +10,15 @@ name: PDV Android (APK de teste)
 # Como pegar o APK:
 #   aba Actions -> abra a execução mais recente -> seção Artifacts -> "pdv-apk"
 #
-# Só roda quando algo dentro de pdv-android/ muda, para não disparar a cada
-# alteração do site.
+# Quando falha, os erros aparecem no RESUMO da execução, no topo da página,
+# sem precisar caçar dentro do log.
 
 on:
   push:
     paths:
       - "pdv-android/**"
       - ".github/workflows/pdv-android.yml"
-  workflow_dispatch:   # permite rodar na mão pelo botão "Run workflow"
+  workflow_dispatch:
 
 jobs:
   build:
@@ -39,8 +39,73 @@ jobs:
           gradle-version: "8.7"
 
       - name: Compilar o APK
+        id: compilar
         working-directory: pdv-android
-        run: gradle assembleDebug --stacktrace
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          gradle assembleDebug --stacktrace --console=plain 2>&1 | tee ../saida-build.txt
+
+      # Lista os métodos de verdade da biblioteca do PagBank.
+      # A documentação deles é incompleta, então em vez de adivinhar a
+      # assinatura de cada chamada, lemos direto do .aar que o Gradle baixou.
+      - name: Listar a API real da biblioteca do PagBank
+        if: always()
+        continue-on-error: true
+        run: |
+          set -u
+          echo "## Assinaturas reais do PlugPag" >> "$GITHUB_STEP_SUMMARY"
+
+          aar=$(find ~/.gradle /root/.gradle -name "wrapper-1.35.0.aar" 2>/dev/null | head -1)
+          if [ -z "$aar" ]; then
+            echo "Não encontrei o .aar baixado." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          mkdir -p /tmp/plugpag && cd /tmp/plugpag
+          unzip -o -q "$aar"
+          [ -f classes.jar ] || { echo "Sem classes.jar dentro do .aar." >> "$GITHUB_STEP_SUMMARY"; exit 0; }
+          mkdir -p classes && cd classes && unzip -o -q ../classes.jar
+
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          for alvo in \
+            PlugPag \
+            PlugPagPaymentData \
+            PlugPagTransactionResult \
+            PlugPagInitializationResult \
+            PlugPagActivationData \
+            PlugPagAppIdentification \
+            PlugPagPrinterData \
+            PlugPagPrintResult
+          do
+            arquivo=$(find . -name "${alvo}.class" | head -1)
+            if [ -n "$arquivo" ]; then
+              classe=$(echo "${arquivo#./}" | sed 's|/|.|g; s|\.class$||')
+              echo "──────── $classe" >> "$GITHUB_STEP_SUMMARY"
+              javap -public -cp . "$classe" 2>/dev/null >> "$GITHUB_STEP_SUMMARY" || true
+            else
+              echo "──────── $alvo  (não existe com este nome)" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Mostrar os erros no resumo
+        if: always()
+        run: |
+          echo "## Resultado da compilação" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.compilar.outcome }}" = "success" ]; then
+            echo "Compilou sem erro." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "A compilação falhou. Linhas relevantes:" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            grep -E "^e: |error:|FAILURE|What went wrong|Execution failed|Caused by|Unresolved reference|Could not find|None of the following|Too many arguments|No value passed" \
+              saida-build.txt | head -60 >> "$GITHUB_STEP_SUMMARY" || true
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            echo "Fim do log:" >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            tail -40 saida-build.txt >> "$GITHUB_STEP_SUMMARY" || true
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Guardar o APK para download
         if: always()
@@ -49,3 +114,15 @@ jobs:
           name: pdv-apk
           path: pdv-android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: warn
+
+      - name: Guardar o log inteiro
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: log-do-build
+          path: saida-build.txt
+          if-no-files-found: warn
+
+      - name: Falhar se a compilação falhou
+        if: steps.compilar.outcome != 'success'
+        run: exit 1
