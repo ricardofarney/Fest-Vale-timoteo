@@ -11,7 +11,6 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPag
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagActivationData
-import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagAppIdentification
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagPaymentData
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagPrinterData
 import java.io.File
@@ -52,10 +51,11 @@ class MainActivity : AppCompatActivity() {
         saida = findViewById(R.id.saida)
         rolagem = findViewById(R.id.rolagem)
 
-        plugPag = PlugPag(
-            this,
-            PlugPagAppIdentification("Fest Vale PDV", "0.1-prova"),
-        )
+        // O segundo parâmetro do PlugPag é um ouvinte de métricas, não a
+        // identificação do app — e PlugPagAppIdentification, nesta versão da
+        // biblioteca, recebe um Context, não nome e versão. Como nada aqui
+        // precisa de métricas, o construtor de um argumento basta.
+        plugPag = PlugPag(this)
 
         escrever("Pronto. Comece pelo botão 1.")
         escrever("As transações aqui são simuladas: nada é cobrado de verdade.")
