@@ -17,7 +17,7 @@ const CORS = {
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...CORS, "Content-Type": "application/json" } });
 
-const CARGOS = ["organizador", "caixa", "portaria"] as const;
+const CARGOS = ["organizador", "financeiro", "caixa", "portaria"] as const;
 type Cargo = (typeof CARGOS)[number];
 
 /** Senha curta, fácil de ditar e digitar no celular, sem caracteres ambíguos. */
