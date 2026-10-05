@@ -82,8 +82,8 @@ class MainActivity : AppCompatActivity() {
                 // Modelo e número de série do aparelho. Serve para saber qual
                 // maquininha fez cada venda e para fechar o minSdk do projeto.
                 try {
-                    escrever("Modelo: ${plugPag.model}")
-                    escrever("Série:  ${plugPag.serialNumber}")
+                    escrever("Modelo: ${plugPag.getModel()}")
+                    escrever("Série:  ${plugPag.getSerialNumber()}")
                 } catch (e: Throwable) {
                     escrever("(não consegui ler modelo/série: ${e.message})")
                 }
@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
         emSegundoPlano("cobrar") {
             // Se a cobrança anterior ficou pendurada esperando cartão, a próxima
             // morre com um erro obscuro. Melhor dizer isso em português.
-            val ocupado = try { plugPag.isServiceBusy } catch (e: Throwable) { false }
+            val ocupado = try { plugPag.isServiceBusy() } catch (e: Throwable) { false }
             if (ocupado) {
                 escrever("O terminal ainda está ocupado com a cobrança anterior.")
                 escrever("Feche o aplicativo por completo e abra de novo.")
