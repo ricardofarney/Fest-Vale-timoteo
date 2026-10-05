@@ -4,6 +4,10 @@
     <!-- Obrigatória para falar com o serviço de pagamento do terminal. -->
     <uses-permission android:name="br.com.uol.pagseguro.permission.MANAGE_PAYMENTS" />
 
+    <!-- O cardápio, os operadores e as vendas moram no banco do site. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
@@ -15,7 +19,8 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
