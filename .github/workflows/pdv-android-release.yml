@@ -1,0 +1,87 @@
+name: PDV Android (VERSÃO DE PRODUÇÃO)
+
+# Gera o APK assinado com a chave de produção, para a homologação e para a
+# loja interna do PagBank. Só roda quando alguém aperta "Run workflow" na aba
+# Actions — nunca sozinho.
+#
+# Precisa dos 4 segredos do repositório (Settings > Secrets and variables >
+# Actions): PDV_KEYSTORE_BASE64, PDV_KEYSTORE_PASSWORD, PDV_KEY_ALIAS e
+# PDV_KEY_PASSWORD. O passo a passo está no arquivo
+# "segredos-para-colar-no-github.txt", na pasta da chave do Ricardo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      versao:
+        description: "Nome da versão (ex.: 1.0.0)"
+        required: true
+        default: "1.0.0"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Conferir se a chave foi cadastrada
+        env:
+          B64: ${{ secrets.PDV_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$B64" ]; then
+            echo "## Falta cadastrar os segredos da chave de produção" >> "$GITHUB_STEP_SUMMARY"
+            echo "Veja o arquivo segredos-para-colar-no-github.txt na pasta da chave." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Instalar o Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Preparar o Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.7"
+
+      - name: Montar a chave (só existe durante esta execução)
+        env:
+          B64: ${{ secrets.PDV_KEYSTORE_BASE64 }}
+        run: echo "$B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+
+      - name: Compilar a versão de produção
+        working-directory: pdv-android
+        env:
+          PDV_KEYSTORE_FILE: ${{ runner.temp }}/release.jks
+          PDV_KEYSTORE_PASSWORD: ${{ secrets.PDV_KEYSTORE_PASSWORD }}
+          PDV_KEY_ALIAS: ${{ secrets.PDV_KEY_ALIAS }}
+          PDV_KEY_PASSWORD: ${{ secrets.PDV_KEY_PASSWORD }}
+          PDV_VERSION_CODE: ${{ github.run_number }}
+          PDV_VERSION_NAME: ${{ github.event.inputs.versao }}
+        run: gradle assembleRelease --stacktrace --console=plain
+
+      - name: Conferir a assinatura
+        run: |
+          apk=$(ls pdv-android/app/build/outputs/apk/release/*.apk | head -1)
+          signer=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          {
+            echo "## Versão de produção pronta"
+            echo ""
+            echo "Versão: ${{ github.event.inputs.versao }} (código ${{ github.run_number }})"
+            echo ""
+            echo '```'
+            "$signer" verify --verbose --print-certs "$apk" | grep -E "Verified using|Signer #1 certificate (DN|SHA-256)"
+            echo '```'
+            echo "A impressão digital SHA-256 acima tem que ser igual à do arquivo LEIA-ME da chave."
+          } >> "$GITHUB_STEP_SUMMARY"
+          mkdir -p saida && cp "$apk" "saida/fest-vale-pdv-${{ github.event.inputs.versao }}.apk"
+
+      - name: Apagar a chave do servidor
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      - name: Guardar o APK de produção
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdv-producao-${{ github.event.inputs.versao }}
+          path: saida/*.apk
