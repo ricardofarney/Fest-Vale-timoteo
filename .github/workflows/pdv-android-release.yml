@@ -70,7 +70,7 @@ jobs:
             echo "Versão: ${{ github.event.inputs.versao }} (código ${{ github.run_number }})"
             echo ""
             echo '```'
-            "$signer" verify --verbose --print-certs "$apk" | grep -E "Verified using|Signer #1 certificate (DN|SHA-256)"
+            "$signer" verify --verbose --print-certs "$apk" 2>&1 | grep -v "^WARNING" | head -30
             echo '```'
             echo "A impressão digital SHA-256 acima tem que ser igual à do arquivo LEIA-ME da chave."
           } >> "$GITHUB_STEP_SUMMARY"
