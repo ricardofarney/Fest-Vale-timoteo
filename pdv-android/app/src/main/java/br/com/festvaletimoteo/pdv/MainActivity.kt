@@ -76,6 +76,12 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         local = Local(this)
         terminal = try { Terminal(this) } catch (e: Throwable) { null }
+        if (Impressos.logo == null) {
+            Impressos.logo = try {
+                android.graphics.BitmapFactory.decodeResource(resources, R.drawable.logo_impressao,
+                    android.graphics.BitmapFactory.Options().apply { inScaled = false })
+            } catch (e: Throwable) { null }
+        }
         raiz = FrameLayout(this)
         setContentView(raiz)
 

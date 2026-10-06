@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
@@ -70,6 +71,36 @@ private class Papel {
 
     fun espaco(altura: Float) { itens += altura to { _, _ -> } }
 
+    /**
+     * Topo do papel: a logo à esquerda e, ao lado, FEST VALE, o tipo do
+     * impresso e o nome do evento. Sem a logo, cai no topo só de texto.
+     */
+    fun cabecalho(logo: Bitmap?, titulo: String, evento: String) {
+        if (logo == null) {
+            centro("FEST VALE", 30f, true)
+            centro(titulo, 20f, true)
+            if (evento.isNotBlank()) centro(evento, 16f)
+            return
+        }
+        val lado = 150f
+        val x0 = margem + lado + 12f
+        val maxW = largura - x0 - margem
+        val pNome = pincel(28f, true)
+        val pTit = pincel(17f, true)
+        val pEv = pincel(14f)
+        val titulos = quebrar(titulo, pTit, maxW)
+        val eventos = if (evento.isBlank()) emptyList() else quebrar(evento, pEv, maxW)
+        val blocoTexto = 30f + titulos.size * 22f + eventos.size * 18f
+        val altura = maxOf(lado, blocoTexto) + 10f
+        itens += altura to { c, y ->
+            c.drawBitmap(logo, null, RectF(margem - 2f, y + 2f, margem - 2f + lado, y + 2f + lado), null)
+            var ty = y + 2f + (lado - blocoTexto) / 2f
+            ty += 28f; c.drawText("FEST VALE", x0, ty, pNome); ty += 4f
+            for (l in titulos) { ty += 20f; c.drawText(l, x0, ty, pTit); ty += 2f }
+            for (l in eventos) { ty += 16f; c.drawText(l, x0, ty, pEv); ty += 2f }
+        }
+    }
+
     fun assinatura(rotulo: String) {
         texto(rotulo, 18f)
         espaco(26f)
@@ -114,6 +145,9 @@ private class Papel {
 
 object Impressos {
 
+    /** Logo em preto e branco para a impressora térmica. A tela principal carrega ao abrir. */
+    @Volatile var logo: Bitmap? = null
+
     /**
      * Ficha de retirada. Vai para a mão do cliente e é lida pela barraca.
      * NÃO leva o nome do operador — decisão do Ricardo.
@@ -122,9 +156,7 @@ object Impressos {
     fun ficha(evento: String, itens: JSONArray, total: Int, meio: String,
               quando: String, token: String, troco: Int, offline: Boolean): Bitmap {
         val p = Papel()
-        p.centro("FEST VALE", 30f, true)
-        p.centro("FICHA DE RETIRADA", 20f, true)
-        if (evento.isNotBlank()) p.centro(evento, 16f)
+        p.cabecalho(logo, "FICHA DE RETIRADA", evento)
         p.tracejado()
         for (i in 0 until itens.length()) {
             val it = itens.getJSONObject(i)
@@ -148,9 +180,7 @@ object Impressos {
     fun reciboSangria(operador: String, valor: Int, quando: String,
                       recebidoPor: String, naGaveta: Int, via: String): Bitmap {
         val p = Papel()
-        p.centro("FEST VALE", 28f, true)
-        p.centro("ENTREGA DE DINHEIRO", 20f, true)
-        p.centro(via, 16f)
+        p.cabecalho(logo, "ENTREGA DE DINHEIRO", via)
         p.tracejado()
         p.linha("Operador", operador, 20f)
         p.linha("Recebido por", recebidoPor, 20f)
@@ -177,9 +207,7 @@ object Impressos {
         val entregue = r.optInt("entregue")
         val dif = entregue - esperado
 
-        p.centro("FEST VALE", 30f, true)
-        p.centro("FECHAMENTO DE CAIXA", 20f, true)
-        if (evento.isNotBlank()) p.centro(evento, 16f)
+        p.cabecalho(logo, "FECHAMENTO DE CAIXA", evento)
         p.tracejado()
         p.linha("Operador", r.optJSONObject("operador")?.optString("nome") ?: "", 20f, true)
         p.linha("Abertura", horaBrasilia(r.optString("aberto_em")), 20f)
