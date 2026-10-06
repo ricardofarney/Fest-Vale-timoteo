@@ -801,24 +801,50 @@ class MainActivity : AppCompatActivity() {
     private fun cobrarNaMaquininha(tipo: Int, meio: String, rotulo: String) {
         val total = totalCarrinho()
         val cid = UUID.randomUUID().toString()
-        val veu = mostrarEspera("Siga as instruções na maquininha…\n\n${brl(total)} no $rotulo")
+        val t = terminal
+        if (t == null) { alerta("Sem leitor de cartão", "Este aparelho não tem o serviço de pagamento do PagBank."); return }
+
+        // Tela da cobrança: o valor, o que o leitor está pedindo e o Cancelar.
+        val veu = coluna().apply {
+            setBackgroundColor(0xF2141618.toInt())
+            gravity = Gravity.CENTER
+            setPadding(dp(24), dp(24), dp(24), dp(24))
+            isClickable = true
+            tag = "espera"
+        }
+        veu.addView(texto("$rotulo · ${brl(total)}", 18f, Cor.CLARO, true, true))
+        val vMsg = texto("Preparando o leitor…", 26f, Cor.BRANCO, true, true).apply { setPadding(0, dp(28), 0, dp(36)) }
+        veu.addView(vMsg, cheio())
+        val vCancelar = botaoContorno("Cancelar cobrança", Cor.CLARO) {}
+        veu.addView(vCancelar, cheio())
+        empilhar(veu)
+
+        t.aoMudarMensagem = { m -> principal.post { vMsg.text = m } }
+        var cancelando = false
+        vCancelar.setOnClickListener {
+            if (cancelando) return@setOnClickListener
+            cancelando = true
+            vCancelar.text = "Cancelando…"
+            Thread { t.cancelar() }.start()
+        }
+
         hardware.execute {
-            val t = terminal
-            if (t == null) {
-                principal.post { tirar(veu); alerta("Sem leitor de cartão", "Este aparelho não tem o serviço de pagamento do PagBank.") }
-                return@execute
-            }
             val erroAtivacao = t.garantirAtivacao(local.codigoAtivacao)
             if (erroAtivacao != null) {
+                t.aoMudarMensagem = null
                 principal.post { tirar(veu); alerta("O pinpad não está pronto", erroAtivacao) }
                 return@execute
             }
+            principal.post { vMsg.text = "INSIRA, PASSE OU APROXIME O CARTÃO" }
             val r = t.cobrar(tipo, total, "FV" + cid.replace("-", "").take(8))
+            t.aoMudarMensagem = null
             principal.post {
                 tirar(veu)
                 when (r) {
                     is Cobranca.Aprovada -> registrarVenda(meio, rotulo, cid, pagamentoExterno = r.codigo)
-                    is Cobranca.Recusada -> alerta("Pagamento não aprovado", r.motivo, "Voltar")
+                    is Cobranca.Recusada ->
+                        if (cancelando) aviso("Cobrança cancelada")
+                        else alerta("Pagamento não aprovado", r.motivo, "Voltar")
                 }
             }
         }

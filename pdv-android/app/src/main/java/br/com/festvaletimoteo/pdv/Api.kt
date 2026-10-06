@@ -23,6 +23,13 @@ object Api {
     private const val ENDERECO = "https://dwynfydbtkwwppwblkbu.supabase.co/rest/v1/rpc/pdv_api"
     private const val CHAVE_PUBLICA = "sb_publishable_SyvYKquTkB6QIc8HsBRzKw_5pk0nTa-"
 
+    /**
+     * "Sem internet" com a causa técnica entre parênteses — foi assim que
+     * descobrimos que o chip do PagBank não alcança o nosso servidor.
+     */
+    private fun semConexao(e: IOException): String =
+        "Sem conexão com a internet (${e.javaClass.simpleName})"
+
     /** Chamada bloqueante: nunca usar na thread da tela. */
     fun chamar(token: String?, acao: String, dados: JSONObject = JSONObject()): JSONObject {
         val corpo = JSONObject()
@@ -42,7 +49,7 @@ object Api {
             conexao.setRequestProperty("Accept", "application/json")
             conexao.outputStream.use { it.write(corpo.toString().toByteArray(Charsets.UTF_8)) }
         } catch (e: IOException) {
-            throw ErroApi("Sem conexão com a internet", semRede = true)
+            throw ErroApi(semConexao(e), semRede = true)
         }
 
         try {
@@ -65,7 +72,7 @@ object Api {
             }
             throw ErroApi(if (mensagem.isBlank()) "Erro $codigo" else mensagem)
         } catch (e: IOException) {
-            throw ErroApi("Sem conexão com a internet", semRede = true)
+            throw ErroApi(semConexao(e), semRede = true)
         } finally {
             conexao.disconnect()
         }

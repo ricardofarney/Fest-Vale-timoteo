@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPag
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagActivationData
+import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagEventData
+import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagEventListener
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagPaymentData
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagPrinterData
 import java.io.File
@@ -29,6 +31,30 @@ sealed class Cobranca {
 class Terminal(contexto: Context) {
     private val plugPag = PlugPag(contexto)
     private val pasta: File = contexto.cacheDir
+
+    /** Quem quer saber o que o leitor está pedindo ("INSIRA O CARTÃO", "SENHA"...). */
+    @Volatile var aoMudarMensagem: ((String) -> Unit)? = null
+
+    init {
+        try {
+            plugPag.setEventListener(object : PlugPagEventListener {
+                override fun onEvent(data: PlugPagEventData) {
+                    val msg = data.customMessage?.trim()
+                    if (!msg.isNullOrEmpty()) aoMudarMensagem?.invoke(msg)
+                }
+            })
+        } catch (e: Throwable) {
+            // sem mensagens do leitor; a cobrança funciona do mesmo jeito
+        }
+    }
+
+    /** Desiste da cobrança em andamento. Chamar de OUTRA thread, nunca da que está em cobrar(). */
+    fun cancelar(): Boolean = try {
+        plugPag.abort()
+        true
+    } catch (e: Throwable) {
+        false
+    }
 
     fun serial(): String = try { plugPag.getSerialNumber() ?: "" } catch (e: Throwable) { "" }
     fun modelo(): String = try { plugPag.getModel() ?: "" } catch (e: Throwable) { "" }
