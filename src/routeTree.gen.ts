@@ -32,6 +32,7 @@ import { Route as AuthenticatedPdvEventIdEstoqueRouteImport } from './routes/_au
 import { Route as AuthenticatedPdvEventIdGestaoRouteImport } from './routes/_authenticated/pdv.$eventId.gestao'
 import { Route as AuthenticatedPdvEventIdIngressosRouteImport } from './routes/_authenticated/pdv.$eventId.ingressos'
 import { Route as AuthenticatedPdvEventIdRelatorioRouteImport } from './routes/_authenticated/pdv.$eventId.relatorio'
+import { Route as AuthenticatedPdvEventIdRelatorioFinalRouteImport } from './routes/_authenticated/pdv.$eventId.relatorio-final'
 import { Route as AuthenticatedPdvEventIdRetiradaRouteImport } from './routes/_authenticated/pdv.$eventId.retirada'
 import { Route as AuthenticatedValidacaoEventIdScannerRouteImport } from './routes/_authenticated/validacao.$eventId.scanner'
 import { Route as AuthenticatedOrganizadorEventosIdDashboardRouteImport } from './routes/_authenticated/organizador.eventos.$id.dashboard'
@@ -165,6 +166,12 @@ const AuthenticatedPdvEventIdRelatorioRoute =
     path: '/pdv/$eventId/relatorio',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedPdvEventIdRelatorioFinalRoute =
+  AuthenticatedPdvEventIdRelatorioFinalRouteImport.update({
+    id: '/pdv/$eventId/relatorio-final',
+    path: '/pdv/$eventId/relatorio-final',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedPdvEventIdRetiradaRoute =
   AuthenticatedPdvEventIdRetiradaRouteImport.update({
     id: '/pdv/$eventId/retirada',
@@ -219,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/pdv/$eventId/gestao': typeof AuthenticatedPdvEventIdGestaoRoute
   '/pdv/$eventId/ingressos': typeof AuthenticatedPdvEventIdIngressosRoute
   '/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
+  '/pdv/$eventId/relatorio-final': typeof AuthenticatedPdvEventIdRelatorioFinalRoute
   '/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
   '/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
   '/organizador/eventos/$id/dashboard': typeof AuthenticatedOrganizadorEventosIdDashboardRoute
@@ -246,6 +254,7 @@ export interface FileRoutesByTo {
   '/pdv/$eventId/gestao': typeof AuthenticatedPdvEventIdGestaoRoute
   '/pdv/$eventId/ingressos': typeof AuthenticatedPdvEventIdIngressosRoute
   '/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
+  '/pdv/$eventId/relatorio-final': typeof AuthenticatedPdvEventIdRelatorioFinalRoute
   '/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
   '/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
   '/organizador/eventos/$id/dashboard': typeof AuthenticatedOrganizadorEventosIdDashboardRoute
@@ -277,6 +286,7 @@ export interface FileRoutesById {
   '/_authenticated/pdv/$eventId/gestao': typeof AuthenticatedPdvEventIdGestaoRoute
   '/_authenticated/pdv/$eventId/ingressos': typeof AuthenticatedPdvEventIdIngressosRoute
   '/_authenticated/pdv/$eventId/relatorio': typeof AuthenticatedPdvEventIdRelatorioRoute
+  '/_authenticated/pdv/$eventId/relatorio-final': typeof AuthenticatedPdvEventIdRelatorioFinalRoute
   '/_authenticated/pdv/$eventId/retirada': typeof AuthenticatedPdvEventIdRetiradaRoute
   '/_authenticated/validacao/$eventId/scanner': typeof AuthenticatedValidacaoEventIdScannerRoute
   '/_authenticated/organizador/eventos/$id/dashboard': typeof AuthenticatedOrganizadorEventosIdDashboardRoute
@@ -308,6 +318,7 @@ export interface FileRouteTypes {
     | '/pdv/$eventId/gestao'
     | '/pdv/$eventId/ingressos'
     | '/pdv/$eventId/relatorio'
+    | '/pdv/$eventId/relatorio-final'
     | '/pdv/$eventId/retirada'
     | '/validacao/$eventId/scanner'
     | '/organizador/eventos/$id/dashboard'
@@ -335,6 +346,7 @@ export interface FileRouteTypes {
     | '/pdv/$eventId/gestao'
     | '/pdv/$eventId/ingressos'
     | '/pdv/$eventId/relatorio'
+    | '/pdv/$eventId/relatorio-final'
     | '/pdv/$eventId/retirada'
     | '/validacao/$eventId/scanner'
     | '/organizador/eventos/$id/dashboard'
@@ -365,6 +377,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pdv/$eventId/gestao'
     | '/_authenticated/pdv/$eventId/ingressos'
     | '/_authenticated/pdv/$eventId/relatorio'
+    | '/_authenticated/pdv/$eventId/relatorio-final'
     | '/_authenticated/pdv/$eventId/retirada'
     | '/_authenticated/validacao/$eventId/scanner'
     | '/_authenticated/organizador/eventos/$id/dashboard'
@@ -545,6 +558,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPdvEventIdRelatorioRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/pdv/$eventId/relatorio-final': {
+      id: '/_authenticated/pdv/$eventId/relatorio-final'
+      path: '/pdv/$eventId/relatorio-final'
+      fullPath: '/pdv/$eventId/relatorio-final'
+      preLoaderRoute: typeof AuthenticatedPdvEventIdRelatorioFinalRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/pdv/$eventId/retirada': {
       id: '/_authenticated/pdv/$eventId/retirada'
       path: '/pdv/$eventId/retirada'
@@ -637,6 +657,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPdvEventIdGestaoRoute: typeof AuthenticatedPdvEventIdGestaoRoute
   AuthenticatedPdvEventIdIngressosRoute: typeof AuthenticatedPdvEventIdIngressosRoute
   AuthenticatedPdvEventIdRelatorioRoute: typeof AuthenticatedPdvEventIdRelatorioRoute
+  AuthenticatedPdvEventIdRelatorioFinalRoute: typeof AuthenticatedPdvEventIdRelatorioFinalRoute
   AuthenticatedPdvEventIdRetiradaRoute: typeof AuthenticatedPdvEventIdRetiradaRoute
   AuthenticatedValidacaoEventIdScannerRoute: typeof AuthenticatedValidacaoEventIdScannerRoute
 }
@@ -652,6 +673,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPdvEventIdGestaoRoute: AuthenticatedPdvEventIdGestaoRoute,
   AuthenticatedPdvEventIdIngressosRoute: AuthenticatedPdvEventIdIngressosRoute,
   AuthenticatedPdvEventIdRelatorioRoute: AuthenticatedPdvEventIdRelatorioRoute,
+  AuthenticatedPdvEventIdRelatorioFinalRoute:
+    AuthenticatedPdvEventIdRelatorioFinalRoute,
   AuthenticatedPdvEventIdRetiradaRoute: AuthenticatedPdvEventIdRetiradaRoute,
   AuthenticatedValidacaoEventIdScannerRoute:
     AuthenticatedValidacaoEventIdScannerRoute,
