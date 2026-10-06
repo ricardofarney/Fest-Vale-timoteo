@@ -9,7 +9,7 @@ import { brl } from "@/lib/format";
 import { toast } from "sonner";
 import {
   ArrowLeft, RefreshCw, AlertTriangle, Banknote, Boxes, Users, Settings2, Gauge,
-  KeyRound, Smartphone, CheckCircle2, Loader2, Plus, Lock, Wallet,
+  KeyRound, Smartphone, CheckCircle2, Loader2, Plus, Lock, Wallet, FileText, Ticket,
 } from "lucide-react";
 
 /**
@@ -65,6 +65,7 @@ type Painel = {
     pix: number; dinheiro: number; offline: number;
   };
   itens_vendidos: number;
+  ingressos_portaria?: { quantidade: number; valor: number };
   por_faixa: { inicio: string; valor: number; vendas: number }[];
   caixas: Resumo[];
   produtos: Produto[];
@@ -160,9 +161,16 @@ function Gestao() {
           <h1 className="font-display text-2xl font-bold leading-tight">Gestão do dia</h1>
           <p className="truncate text-sm text-muted-foreground">{data?.evento.nome ?? "Carregando…"}</p>
         </div>
-        <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching} aria-label="Atualizar">
-          <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-        </Button>
+        <div className="flex shrink-0 gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link to="/pdv/$eventId/relatorio-final" params={{ eventId }}>
+              <FileText className="mr-1 h-4 w-4" />Relatório
+            </Link>
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching} aria-label="Atualizar">
+            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+          </Button>
+        </div>
       </div>
       {data && (
         <p className="mt-1 text-xs text-muted-foreground">
@@ -299,6 +307,18 @@ function AbaAgora({ p, irPara }: { p: Painel; irPara: (a: Aba) => void }) {
           <div className="text-xs text-muted-foreground">{p.totais.cortesias} cortesias</div>
         </Card>
       </div>
+
+      {(p.ingressos_portaria?.quantidade ?? 0) > 0 && (
+        <Card className="mt-3 flex items-center justify-between gap-3 p-4">
+          <div className="flex items-center gap-2 text-sm">
+            <Ticket className="h-4 w-4 text-primary" />Ingressos vendidos na portaria
+          </div>
+          <div className="text-right">
+            <div className="font-display text-lg font-bold tabular-nums">{p.ingressos_portaria!.quantidade}</div>
+            <div className="text-xs text-muted-foreground">{brl(p.ingressos_portaria!.valor)}</div>
+          </div>
+        </Card>
+      )}
 
       {(baixos.length > 0 || fechadosSemConferir > 0 || p.totais.offline > 0) && (
         <div className="mt-3 space-y-2">
