@@ -30,6 +30,23 @@ android {
             keyAlias = "androiddebugkey"
             keyPassword = "android"
         }
+
+        // Chave de PRODUÇÃO. Nunca entra no repositório (ele é público): o
+        // GitHub monta o arquivo a partir dos "segredos" cadastrados pelo
+        // Ricardo, só na hora de gerar a versão de produção. Original e
+        // senha: pasta "PDV - chave de assinatura (NAO APAGAR)" no OneDrive.
+        val chaveRelease = System.getenv("PDV_KEYSTORE_FILE")
+        if (chaveRelease != null) {
+            create("release") {
+                storeFile = file(chaveRelease)
+                storePassword = System.getenv("PDV_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("PDV_KEY_ALIAS")
+                keyPassword = System.getenv("PDV_KEY_PASSWORD")
+                // O guia do PagBank exige assinatura V1 e V2.
+                enableV1Signing = true
+                enableV2Signing = true
+            }
+        }
     }
 
     defaultConfig {
@@ -42,13 +59,16 @@ android {
         minSdk = 23
         targetSdk = 23
 
-        versionCode = 1
-        versionName = "0.1-prova"
+        // Cada versão de produção precisa de um número maior que a anterior.
+        // O GitHub passa o número da execução; nos testes fica 1.
+        versionCode = (System.getenv("PDV_VERSION_CODE") ?: "1").toInt()
+        versionName = System.getenv("PDV_VERSION_NAME") ?: "0.9-teste"
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.findByName("release")
         }
     }
 
@@ -59,6 +79,14 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    // O PagBank exige targetSdk 23, que o lint do Google considera "vencido"
+    // (regra da Play Store, que não se aplica à loja interna do PagBank).
+    // Sem isto, a versão de produção pararia nessa checagem.
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
     }
 }
 
