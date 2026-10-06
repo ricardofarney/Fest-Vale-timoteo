@@ -76,7 +76,13 @@ jobs:
             PlugPagActivationData \
             PlugPagAppIdentification \
             PlugPagPrinterData \
-            PlugPagPrintResult
+            PlugPagPrintResult \
+            PlugPagEventListener \
+            PlugPagEventData \
+            PlugPagCustomPrinterLayout \
+            PlugPagStyleData \
+            PlugPagPrintActionListener \
+            PlugPagPrintActionResult
           do
             arquivo=$(find . -name "${alvo}.class" | head -1)
             if [ -n "$arquivo" ]; then
