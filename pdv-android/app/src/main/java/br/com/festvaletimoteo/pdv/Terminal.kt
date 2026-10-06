@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPag
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagActivationData
+import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagCustomPrinterLayout
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagEventData
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagEventListener
 import br.com.uol.pagseguro.plugpagservice.wrapper.PlugPagPaymentData
@@ -45,6 +46,26 @@ class Terminal(contexto: Context) {
             })
         } catch (e: Throwable) {
             // sem mensagens do leitor; a cobrança funciona do mesmo jeito
+        }
+
+        // A janela "imprimir via do cliente / SMS / cancelar" do PagBank aparece
+        // mesmo com printReceipt = false. Ela não pode ser desligada, mas pode
+        // fechar sozinha: em 4 segundos some sem ninguém tocar. Se o cliente
+        // pedir o comprovante do cartão, dá tempo de tocar em imprimir.
+        try {
+            plugPag.setPlugPagCustomPrinterLayout(PlugPagCustomPrinterLayout().apply {
+                title = "Comprovante do cartão"
+                titleColor = "#FFFFFF"
+                confirmTextColor = "#FFFFFF"
+                cancelTextColor = "#FFFFFF"
+                windowBackgroundColor = "#2F3031"
+                buttonBackgroundColor = "#1D7760"
+                buttonBackgroundColorDisabled = "#B9C0C6"
+                sendSMSTextColor = "#FFFFFF"
+                maxTimeShowPopup = 4
+            })
+        } catch (e: Throwable) {
+            // mantém a janela padrão do PagBank
         }
     }
 
