@@ -65,7 +65,7 @@ export const FEST = {
   googleHabilitado: false,
 
   contato: {
-    email: "",
+    email: "contato@festvaletimoteo.com.br",
     /**
      * Número do WhatsApp do evento, com país e DDD: "5531999999999".
      * Enquanto estiver vazio, o botão flutuante e os links de contato
@@ -74,8 +74,8 @@ export const FEST = {
      * Não usamos a API oficial da Meta: o site só abre a conversa no
      * aplicativo, com uma mensagem já escrita. O atendimento é humano.
      */
-    whatsapp: "",
-    instagram: "",
+    whatsapp: "5531995348840", // (31) 99534-8840
+    instagram: "festvaletimoteo", // https://www.instagram.com/festvaletimoteo/
   },
 
   /**
