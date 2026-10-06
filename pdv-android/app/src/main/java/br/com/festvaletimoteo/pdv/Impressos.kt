@@ -149,30 +149,26 @@ object Impressos {
     @Volatile var logo: Bitmap? = null
 
     /**
-     * Ficha de retirada. Vai para a mão do cliente e é lida pela barraca.
-     * NÃO leva o nome do operador — decisão do Ricardo.
-     * O QR carrega só o token, que é o que a tela de retirada lê.
+     * Ficha de retirada — UMA POR UNIDADE (decisão do Ricardo, 06/10/2026).
+     * Vai para a mão do cliente e é lida pela barraca; cada ficha é retirada
+     * sozinha. NÃO leva o nome do operador. O QR carrega só o token.
      */
-    fun ficha(evento: String, itens: JSONArray, total: Int, meio: String,
-              quando: String, token: String, troco: Int, offline: Boolean): Bitmap {
+    fun ficha(evento: String, nome: String, preco: Int, meio: String, quando: String,
+              token: String, numero: Int, de: Int, offline: Boolean): Bitmap {
         val p = Papel()
         p.cabecalho(logo, "FICHA DE RETIRADA", evento)
         p.tracejado()
-        for (i in 0 until itens.length()) {
-            val it = itens.getJSONObject(i)
-            val q = it.optInt("qtd")
-            p.linha("${q}x ${it.optString("nome")}", brl(q * it.optInt("preco")), 22f, true)
-        }
-        p.tracejado()
-        p.linha("TOTAL", brl(total), 24f, true)
-        p.linha(meio, quando, 18f)
-        if (troco > 0) p.linha("Troco", brl(troco), 18f)
+        p.espaco(4f)
+        p.centro(nome, 30f, true)
+        p.espaco(2f)
+        p.linha(meio, brl(preco), 20f)
+        p.linha(quando, "ficha $numero de $de", 18f)
         p.espaco(6f)
         p.qr(token)
         p.centro(token.uppercase(), 18f, true)
         if (offline) p.centro("(registrada sem internet)", 15f)
-        p.espaco(10f)
-        p.centro("Apresente esta ficha na barraca", 16f)
+        p.espaco(8f)
+        p.centro("Vale 1 unidade. Apresente na barraca.", 16f)
         return p.desenhar()
     }
 

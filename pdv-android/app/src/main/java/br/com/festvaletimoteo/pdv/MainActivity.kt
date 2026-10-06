@@ -969,12 +969,19 @@ class MainActivity : AppCompatActivity() {
         val cortesia = meio == "cortesia"
         val total = if (cortesia) 0 else totalCarrinho()
         val itensReq = JSONArray()
-        val itensImp = JSONArray()
+        // Uma ficha (um QR) por unidade. O token nasce aqui para a ficha poder
+        // sair mesmo sem internet; o banco grava cada uma quando a venda sobe.
+        val fichasReq = JSONArray()
+        val fichasImp = JSONArray()
         for ((id, q) in carrinho) {
             val p = produto(id) ?: continue
             itensReq.put(JSONObject().put("product_id", id).put("qty", q))
-            itensImp.put(JSONObject().put("nome", p.optString("nome")).put("qtd", q)
-                .put("preco", if (cortesia) 0 else p.optInt("preco")))
+            repeat(q) {
+                val tk = novoToken()
+                fichasReq.put(JSONObject().put("token", tk).put("product_id", id))
+                fichasImp.put(JSONObject().put("token", tk).put("nome", p.optString("nome"))
+                    .put("preco", if (cortesia) 0 else p.optInt("preco")))
+            }
         }
         val token = novoToken()
         val dados = JSONObject()
@@ -982,6 +989,7 @@ class MainActivity : AppCompatActivity() {
             .put("caixa_id", caixa?.optString("caixa_id"))
             .put("meio", meio)
             .put("itens", itensReq)
+            .put("fichas", fichasReq)
             .put("ticket_token", token)
             .put("vendido_em", agoraIso())
         if (recebido != null) dados.put("recebido_cents", recebido)
@@ -998,7 +1006,7 @@ class MainActivity : AppCompatActivity() {
                 principal.post {
                     tirar(veu); resposta?.invoke(null)
                     r.optJSONObject("caixa")?.let { caixa = it }
-                    concluir(itensImp, total, rotulo, token, troco, false)
+                    concluir(fichasImp, total, rotulo, troco, false)
                 }
                 atualizarEstadoSilencioso()
             } catch (e: ErroApi) {
@@ -1009,7 +1017,7 @@ class MainActivity : AppCompatActivity() {
                     principal.post {
                         tirar(veu); resposta?.invoke(null)
                         baixarLocalmente(total, meio)
-                        concluir(itensImp, total, rotulo, token, troco, true)
+                        concluir(fichasImp, total, rotulo, troco, true)
                     }
                 } else {
                     principal.post {
@@ -1063,10 +1071,20 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun concluir(itens: JSONArray, total: Int, rotulo: String, token: String, troco: Int, offline: Boolean) {
+    private fun concluir(fichas: JSONArray, total: Int, rotulo: String, troco: Int, offline: Boolean) {
         val quando = dataHoraBrasilia()
-        val gerar = { Impressos.ficha(local.nomeEvento, itens, total, rotulo, quando, token, troco, offline) }
-        imprimirEmFundo(gerar)
+        val n = fichas.length()
+        // Imprime as fichas em sequência, uma por unidade.
+        val imprimirTodas = {
+            for (i in 0 until n) {
+                val f = fichas.getJSONObject(i)
+                imprimirEmFundo({
+                    Impressos.ficha(local.nomeEvento, f.optString("nome"), f.optInt("preco"), rotulo,
+                        quando, f.optString("token"), i + 1, n, offline)
+                })
+            }
+        }
+        imprimirTodas()
 
         val cor = when { rotulo == "Cortesia" -> Cor.LARANJA; offline -> 0xFF8A6D1F.toInt(); else -> Cor.OK }
         val c = coluna().apply {
@@ -1078,19 +1096,20 @@ class MainActivity : AppCompatActivity() {
         c.addView(texto("✓", 64f, Cor.BRANCO, true, true))
         c.addView(texto(when { rotulo == "Cortesia" -> "CORTESIA LIBERADA"; offline -> "VENDA NA FILA"; else -> "VENDA REGISTRADA" },
             26f, Cor.BRANCO, true, true))
-        c.addView(texto("${brl(total)} · $rotulo", 17f, Cor.BRANCO, false, true).apply { setPadding(0, dp(6), 0, 0) })
+        c.addView(texto("${brl(total)} · $rotulo · ${if (n == 1) "1 ficha" else "$n fichas"}", 17f, Cor.BRANCO, false, true).apply { setPadding(0, dp(6), 0, 0) })
         if (troco > 0) {
             c.addView(texto("TROCO ${brl(troco)}", 34f, Cor.BRANCO, true, true).apply {
                 background = fundo(0x33000000, 12); setPadding(dp(16), dp(10), dp(16), dp(10))
             }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(18) })
         }
-        c.addView(texto(if (offline) "Sem internet: a venda sobe sozinha quando a rede voltar.\nEntregue a ficha ao cliente."
-                        else "Entregue a ficha ao cliente.", 15f, Cor.BRANCO, false, true).apply { setPadding(0, dp(18), 0, dp(22)) })
+        val entregue = if (n == 1) "Entregue a ficha ao cliente." else "Entregue as $n fichas ao cliente."
+        c.addView(texto(if (offline) "Sem internet: a venda sobe sozinha quando a rede voltar.\n$entregue"
+                        else entregue, 15f, Cor.BRANCO, false, true).apply { setPadding(0, dp(18), 0, dp(22)) })
         val proxima = botao("PRÓXIMA VENDA", Cor.BRANCO, cor, 18f, 58) {}
         c.addView(proxima, cheio())
-        c.addView(texto("Imprimir a ficha de novo", 15f, Cor.BRANCO, false, true).apply {
+        c.addView(texto(if (n == 1) "Imprimir a ficha de novo" else "Imprimir as $n fichas de novo", 15f, Cor.BRANCO, false, true).apply {
             setPadding(0, dp(16), 0, dp(4))
-            setOnClickListener { imprimirEmFundo(gerar) }
+            setOnClickListener { imprimirTodas() }
         })
         val tela = empilhar(c)
         proxima.setOnClickListener {
