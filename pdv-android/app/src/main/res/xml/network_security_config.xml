@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  As Moderninha Smart 2 (P2-B) rodam Android 7, que não conhece a raiz do
+  Let's Encrypt (ISRG Root X1) — e é ela que assina o certificado do site
+  festvaletimoteo.com.br. Sem isto, o app não conectaria nesses aparelhos.
+  As raízes do sistema continuam valendo; só acrescentamos as do Let's Encrypt.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="@raw/isrg_root_x1" />
+            <certificates src="@raw/isrg_root_x2" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
