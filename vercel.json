@@ -3,7 +3,13 @@
   "buildCommand": "vite build && cp dist/client/_shell.html dist/client/index.html",
   "outputDirectory": "dist/client",
   "framework": null,
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "rewrites": [
+    {
+      "source": "/api/pdv",
+      "destination": "https://dwynfydbtkwwppwblkbu.supabase.co/rest/v1/rpc/pdv_api"
+    },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",
