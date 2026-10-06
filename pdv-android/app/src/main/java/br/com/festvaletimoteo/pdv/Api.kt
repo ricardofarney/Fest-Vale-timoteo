@@ -20,7 +20,17 @@ class ErroApi(mensagem: String, val semRede: Boolean = false) : Exception(mensag
  * ganha no pareamento, e o banco confere esse token antes de qualquer coisa.
  */
 object Api {
-    private const val ENDERECO = "https://dwynfydbtkwwppwblkbu.supabase.co/rest/v1/rpc/pdv_api"
+    /**
+     * Endereço principal: o nosso domínio. A Vercel repassa para o banco
+     * (rewrite em vercel.json). É ESTE endereço que o PagBank libera no chip
+     * das maquininhas — se um dia trocarmos de servidor, a liberação continua
+     * valendo.
+     */
+    private const val PRINCIPAL = "https://www.festvaletimoteo.com.br/api/pdv"
+
+    /** Reserva: o banco direto. Só funciona com Wi-Fi (o chip do PagBank não alcança). */
+    private const val RESERVA = "https://dwynfydbtkwwppwblkbu.supabase.co/rest/v1/rpc/pdv_api"
+
     private const val CHAVE_PUBLICA = "sb_publishable_SyvYKquTkB6QIc8HsBRzKw_5pk0nTa-"
 
     /**
@@ -36,20 +46,19 @@ object Api {
             .put("_token", token ?: JSONObject.NULL)
             .put("_acao", acao)
             .put("_dados", dados)
+            .toString().toByteArray(Charsets.UTF_8)
 
-        val conexao: HttpURLConnection
-        try {
-            conexao = URL(ENDERECO).openConnection() as HttpURLConnection
-            conexao.requestMethod = "POST"
-            conexao.connectTimeout = 8_000
-            conexao.readTimeout = 20_000
-            conexao.doOutput = true
-            conexao.setRequestProperty("apikey", CHAVE_PUBLICA)
-            conexao.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-            conexao.setRequestProperty("Accept", "application/json")
-            conexao.outputStream.use { it.write(corpo.toString().toByteArray(Charsets.UTF_8)) }
+        // Tenta o endereço principal; se não conseguir nem conectar, tenta a
+        // reserva. Só troca quando o pedido NÃO chegou ao servidor — assim
+        // nunca registra a mesma coisa duas vezes.
+        val conexao = try {
+            abrir(PRINCIPAL, corpo)
         } catch (e: IOException) {
-            throw ErroApi(semConexao(e), semRede = true)
+            try {
+                abrir(RESERVA, corpo)
+            } catch (e2: IOException) {
+                throw ErroApi(semConexao(e2), semRede = true)
+            }
         }
 
         try {
@@ -75,6 +84,29 @@ object Api {
             throw ErroApi(semConexao(e), semRede = true)
         } finally {
             conexao.disconnect()
+        }
+    }
+
+    /** Abre a conexão e envia o corpo. Qualquer IOException aqui = o pedido não saiu. */
+    private fun abrir(endereco: String, corpo: ByteArray): HttpURLConnection {
+        val c = URL(endereco).openConnection() as HttpURLConnection
+        try {
+            c.requestMethod = "POST"
+            c.connectTimeout = 8_000
+            c.readTimeout = 20_000
+            c.doOutput = true
+            c.setRequestProperty("apikey", CHAVE_PUBLICA)
+            c.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+            c.setRequestProperty("Accept", "application/json")
+            // Corpo com tamanho fixo: sai na hora da escrita, não só na resposta.
+            // Assim, se a conexão falhar, a falha aparece AQUI (pedido não saiu).
+            c.setFixedLengthStreamingMode(corpo.size)
+            c.connect()
+            c.outputStream.use { it.write(corpo) }
+            return c
+        } catch (e: IOException) {
+            c.disconnect()
+            throw e
         }
     }
 }

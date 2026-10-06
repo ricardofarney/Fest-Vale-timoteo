@@ -49,6 +49,8 @@ class MainActivity : AppCompatActivity() {
     // estado da sessão
     private var produtos = JSONArray()
     private var operadores = JSONArray()
+    /** Lote ativo de cada tipo de ingresso, para a venda na portaria. */
+    private var ingressos = JSONArray()
     private var operadorId: String? = null
     private var operadorNome = ""
     private var caixa: JSONObject? = null
@@ -312,6 +314,7 @@ class MainActivity : AppCompatActivity() {
         r.optJSONObject("evento")?.optString("nome")?.let { if (it.isNotBlank()) local.nomeEvento = it }
         produtos = r.optJSONArray("produtos") ?: JSONArray()
         operadores = r.optJSONArray("operadores") ?: JSONArray()
+        ingressos = r.optJSONArray("ingressos") ?: JSONArray()
     }
 
     private fun carregarEstado(depois: () -> Unit) {
@@ -551,8 +554,11 @@ class MainActivity : AppCompatActivity() {
     private fun categorias(): List<String> {
         val vistas = LinkedHashSet<String>()
         for (i in 0 until produtos.length()) vistas += produtos.getJSONObject(i).optString("categoria", "Outros")
+        if (ingressos.length() > 0) vistas += ABA_INGRESSO
         return vistas.toList()
     }
+
+    private val ABA_INGRESSO = "Ingresso"
 
     private fun produto(id: String): JSONObject? {
         for (i in 0 until produtos.length()) {
@@ -672,6 +678,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
         val cat = cats[aba.coerceIn(0, cats.size - 1)]
+        if (cat == ABA_INGRESSO) { desenharIngressos(g); return }
         val daAba = (0 until produtos.length()).map { produtos.getJSONObject(it) }.filter { it.optString("categoria") == cat }
         for (par in daAba.chunked(2)) {
             val l = linhaH()
@@ -804,8 +811,9 @@ class MainActivity : AppCompatActivity() {
         return b.joinToString("") { "%02x".format(it) }
     }
 
-    private fun cobrarNaMaquininha(tipo: Int, meio: String, rotulo: String) {
-        val total = totalCarrinho()
+    private fun cobrarNaMaquininha(tipo: Int, meio: String, rotulo: String,
+                                   total: Int = totalCarrinho(),
+                                   aoAprovar: ((cid: String, codigo: String) -> Unit)? = null) {
         val cid = UUID.randomUUID().toString()
         val t = terminal
         if (t == null) { alerta("Sem leitor de cartão", "Este aparelho não tem o serviço de pagamento do PagBank."); return }
@@ -847,7 +855,9 @@ class MainActivity : AppCompatActivity() {
             principal.post {
                 tirar(veu)
                 when (r) {
-                    is Cobranca.Aprovada -> registrarVenda(meio, rotulo, cid, pagamentoExterno = r.codigo)
+                    is Cobranca.Aprovada ->
+                        if (aoAprovar != null) aoAprovar(cid, r.codigo)
+                        else registrarVenda(meio, rotulo, cid, pagamentoExterno = r.codigo)
                     is Cobranca.Recusada ->
                         if (cancelando) aviso("Cobrança cancelada")
                         else alerta("Pagamento não aprovado", r.motivo, "Voltar")
@@ -856,8 +866,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun telaTroco() {
-        val devido = totalCarrinho()
+    private fun telaTroco(devido: Int = totalCarrinho(), aoConfirmar: ((recebido: Int) -> Unit)? = null) {
         var recebido: Int? = null
         val c = coluna()
         val vRec = texto("—", 30f, Cor.TEXTO, true, true)
@@ -912,7 +921,8 @@ class MainActivity : AppCompatActivity() {
             val r = recebido ?: return@setOnClickListener
             if (r < devido) return@setOnClickListener
             tirar(janela)
-            registrarVenda("dinheiro", "Dinheiro", UUID.randomUUID().toString(), recebido = r)
+            if (aoConfirmar != null) aoConfirmar(r)
+            else registrarVenda("dinheiro", "Dinheiro", UUID.randomUUID().toString(), recebido = r)
         }
         c.addView(confirmar, cheio().apply { topMargin = dp(12) })
         atualizar()
@@ -1085,7 +1095,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
         imprimirTodas()
+        telaConcluida(n, if (n == 1) "ficha" else "fichas", total, rotulo, troco, offline, imprimirTodas)
+    }
 
+    /** Tela verde do fim da venda — serve para o bar e para o ingresso. */
+    private fun telaConcluida(n: Int, unidade: String, total: Int, rotulo: String, troco: Int,
+                              offline: Boolean, reimprimir: () -> Unit, limparCarrinho: Boolean = true) {
         val cor = when { rotulo == "Cortesia" -> Cor.LARANJA; offline -> 0xFF8A6D1F.toInt(); else -> Cor.OK }
         val c = coluna().apply {
             setBackgroundColor(cor)
@@ -1096,27 +1111,191 @@ class MainActivity : AppCompatActivity() {
         c.addView(texto("✓", 64f, Cor.BRANCO, true, true))
         c.addView(texto(when { rotulo == "Cortesia" -> "CORTESIA LIBERADA"; offline -> "VENDA NA FILA"; else -> "VENDA REGISTRADA" },
             26f, Cor.BRANCO, true, true))
-        c.addView(texto("${brl(total)} · $rotulo · ${if (n == 1) "1 ficha" else "$n fichas"}", 17f, Cor.BRANCO, false, true).apply { setPadding(0, dp(6), 0, 0) })
+        c.addView(texto("${brl(total)} · $rotulo · $n $unidade", 17f, Cor.BRANCO, false, true).apply { setPadding(0, dp(6), 0, 0) })
         if (troco > 0) {
             c.addView(texto("TROCO ${brl(troco)}", 34f, Cor.BRANCO, true, true).apply {
                 background = fundo(0x33000000, 12); setPadding(dp(16), dp(10), dp(16), dp(10))
             }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { topMargin = dp(18) })
         }
-        val entregue = if (n == 1) "Entregue a ficha ao cliente." else "Entregue as $n fichas ao cliente."
+        val entregue = "Entregue ${if (n == 1) "o impresso" else "os $n impressos"} ao cliente."
         c.addView(texto(if (offline) "Sem internet: a venda sobe sozinha quando a rede voltar.\n$entregue"
                         else entregue, 15f, Cor.BRANCO, false, true).apply { setPadding(0, dp(18), 0, dp(22)) })
         val proxima = botao("PRÓXIMA VENDA", Cor.BRANCO, cor, 18f, 58) {}
         c.addView(proxima, cheio())
-        c.addView(texto(if (n == 1) "Imprimir a ficha de novo" else "Imprimir as $n fichas de novo", 15f, Cor.BRANCO, false, true).apply {
+        c.addView(texto("Imprimir de novo", 15f, Cor.BRANCO, false, true).apply {
             setPadding(0, dp(16), 0, dp(4))
-            setOnClickListener { imprimirTodas() }
+            setOnClickListener { reimprimir() }
         })
         val tela = empilhar(c)
         proxima.setOnClickListener {
             raiz.removeView(tela)
-            carrinho.clear()
+            if (limparCarrinho) carrinho.clear()
             desenharGrade(); atualizarRodape(); atualizarCabecalho(); atualizarStatus()
         }
+    }
+
+    // ====================================================================
+    //  ingresso na portaria
+    // ====================================================================
+
+    /** Aba "Ingresso": um cartão por tipo de ingresso, com o preço do lote ativo. */
+    private fun desenharIngressos(g: LinearLayout) {
+        g.addView(texto("Toque no ingresso para escolher quantas pessoas.", 13f, Cor.MUDO).apply {
+            setPadding(dp(6), dp(2), dp(6), dp(8))
+        })
+        for (i in 0 until ingressos.length()) {
+            val l = ingressos.getJSONObject(i)
+            val cartao = linhaH().apply {
+                background = fundo(Cor.CARTAO, 12, Cor.LINHA, 1)
+                setPadding(dp(14), dp(16), dp(14), dp(16))
+                setOnClickListener { telaIngresso(l) }
+            }
+            val t = coluna()
+            t.addView(texto("Ingresso ${l.optString("tipo")}", 18f, Cor.TEXTO, true))
+            val rest = if (l.isNull("restantes")) "" else " · restam ${l.optInt("restantes")}"
+            t.addView(texto("${l.optString("lote")}$rest", 13f, Cor.MUDO))
+            cartao.addView(t, peso())
+            cartao.addView(texto(brl(l.optInt("preco")), 22f, Cor.TEXTO, true))
+            g.addView(cartao, cheio().apply { setMargins(dp(4), dp(4), dp(4), dp(4)) })
+        }
+    }
+
+    private fun telaIngresso(lote: JSONObject) {
+        val preco = lote.optInt("preco")
+        var qtd = 1
+        val c = coluna()
+        var janela: View? = null
+        c.addView(texto("${lote.optString("lote")} · ${brl(preco)} por pessoa", 14f, Cor.MUDO, false, true))
+        c.addView(texto("QUANTAS PESSOAS?", 12f, Cor.MUDO, true, true).apply { setPadding(0, dp(14), 0, dp(6)) })
+        val vQtd = texto("1", 40f, Cor.TEXTO, true, true)
+        val vTotal = texto(brl(preco), 22f, Cor.OK, true, true)
+        val l = linhaH().apply { gravity = Gravity.CENTER }
+        val menos = texto("−", 30f, Cor.TEXTO, true, true).apply { background = fundo(Cor.TELA, 12, Cor.LINHA, 1) }
+        val mais = texto("+", 30f, Cor.TEXTO, true, true).apply { background = fundo(Cor.TELA, 12, Cor.LINHA, 1) }
+        fun atualizar() { vQtd.text = qtd.toString(); vTotal.text = "Total ${brl(qtd * preco)}" }
+        menos.setOnClickListener { if (qtd > 1) { qtd--; atualizar() } }
+        mais.setOnClickListener { if (qtd < 20) { qtd++; atualizar() } }
+        l.addView(menos, LinearLayout.LayoutParams(dp(64), dp(64)))
+        l.addView(vQtd, LinearLayout.LayoutParams(dp(90), ViewGroup.LayoutParams.WRAP_CONTENT))
+        l.addView(mais, LinearLayout.LayoutParams(dp(64), dp(64)))
+        c.addView(l, cheio())
+        c.addView(vTotal, cheio().apply { topMargin = dp(8); bottomMargin = dp(10) })
+        atualizar()
+
+        fun opcao(titulo: String, cor: Int, aoTocar: () -> Unit): View =
+            texto(titulo, 17f, cor, true, true).apply {
+                background = fundo(Cor.CARTAO, 12, cor, 2)
+                setPadding(dp(6), dp(16), dp(6), dp(16))
+                setOnClickListener { tirar(janela); aoTocar() }
+            }
+        fun noCartao(tipo: Int, meio: String, rotulo: String) {
+            val total = qtd * preco
+            val q = qtd
+            cobrarNaMaquininha(tipo, meio, rotulo, total) { cid, codigo ->
+                registrarIngresso(lote, q, meio, rotulo, cid, pagamentoExterno = codigo)
+            }
+        }
+        val l1 = linhaH()
+        l1.addView(opcao("Crédito", Cor.TEXTO) { noCartao(PlugPag.TYPE_CREDITO, "credito", "Crédito") }, peso().apply { setMargins(dp(4), dp(4), dp(4), dp(4)) })
+        l1.addView(opcao("Débito", Cor.TEXTO) { noCartao(PlugPag.TYPE_DEBITO, "debito", "Débito") }, peso().apply { setMargins(dp(4), dp(4), dp(4), dp(4)) })
+        c.addView(l1, cheio())
+        val l2 = linhaH()
+        l2.addView(opcao("Pix", Cor.TEXTO) { noCartao(PlugPag.TYPE_PIX, "pix", "Pix") }, peso().apply { setMargins(dp(4), dp(4), dp(4), dp(4)) })
+        l2.addView(opcao("Dinheiro", Cor.OK) {
+            val q = qtd
+            telaTroco(q * preco) { recebido ->
+                registrarIngresso(lote, q, "dinheiro", "Dinheiro", UUID.randomUUID().toString(), recebido = recebido)
+            }
+        }, peso().apply { setMargins(dp(4), dp(4), dp(4), dp(4)) })
+        c.addView(l2, cheio())
+        janela = folha("Ingresso ${lote.optString("tipo")}", c)
+    }
+
+    private fun tokenIngresso(): String {
+        val b = ByteArray(16); sorteio.nextBytes(b)
+        return b.joinToString("") { "%02x".format(it) }
+    }
+
+    /**
+     * Registra a venda do ingresso. Sem internet, vai para a fila igual à venda
+     * do bar: os QR nascem aqui e passam a valer na entrada assim que a venda
+     * sobe — por isso a portaria precisa de rede para validar.
+     */
+    private fun registrarIngresso(lote: JSONObject, qtd: Int, meio: String, rotulo: String, clientUuid: String,
+                                  recebido: Int? = null, pagamentoExterno: String? = null) {
+        val total = qtd * lote.optInt("preco")
+        val tokens = JSONArray().apply { repeat(qtd) { put(tokenIngresso()) } }
+        val dados = JSONObject()
+            .put("_fila_acao", "vender_ingresso")
+            .put("client_uuid", clientUuid)
+            .put("caixa_id", caixa?.optString("caixa_id"))
+            .put("meio", meio)
+            .put("batch_id", lote.optString("batch_id"))
+            .put("qtd", qtd)
+            .put("tokens", tokens)
+            .put("vendido_em", agoraIso())
+        if (recebido != null) dados.put("recebido_cents", recebido)
+        if (pagamentoExterno != null) dados.put("pagamento_externo", pagamentoExterno)
+        val troco = if (recebido != null) recebido - total else 0
+
+        val veu = mostrarEspera("Registrando o ingresso…")
+        rede.execute {
+            try {
+                val r = Api.chamar(local.token, "vender_ingresso", dados)
+                online = true
+                principal.post {
+                    tirar(veu)
+                    r.optJSONObject("caixa")?.let { caixa = it }
+                    concluirIngresso(lote, tokens, total, rotulo, troco, false)
+                }
+                atualizarEstadoSilencioso()
+            } catch (e: ErroApi) {
+                if (e.semRede) {
+                    online = false
+                    dados.put("offline", true)
+                    local.enfileirar(dados)
+                    principal.post {
+                        tirar(veu)
+                        caixa?.let { cx ->
+                            cx.put("vendido", cx.optInt("vendido") + total)
+                            cx.put("vendas", cx.optInt("vendas") + 1)
+                            if (meio == "dinheiro") {
+                                cx.put("dinheiro", cx.optInt("dinheiro") + total)
+                                cx.put("na_gaveta", cx.optInt("na_gaveta") + total)
+                            }
+                        }
+                        concluirIngresso(lote, tokens, total, rotulo, troco, true)
+                    }
+                } else {
+                    principal.post {
+                        tirar(veu)
+                        alerta("Ingresso não registrado",
+                            (if (pagamentoExterno != null) "A cobrança foi APROVADA (código $pagamentoExterno), mas o sistema recusou:\n\n" else "") +
+                            (e.message ?: "Erro") +
+                            (if (pagamentoExterno != null) "\n\nChame um gestor antes de liberar a entrada." else ""))
+                    }
+                }
+            } catch (e: Throwable) {
+                principal.post { tirar(veu); alerta("Ingresso não registrado", e.message ?: e.javaClass.simpleName) }
+            }
+        }
+    }
+
+    private fun concluirIngresso(lote: JSONObject, tokens: JSONArray, total: Int, rotulo: String,
+                                 troco: Int, offline: Boolean) {
+        val quando = dataHoraBrasilia()
+        val n = tokens.length()
+        val imprimirTodos = {
+            for (i in 0 until n) {
+                val tk = tokens.getString(i)
+                imprimirEmFundo({
+                    Impressos.ingresso(local.nomeEvento, lote.optString("tipo"), lote.optString("lote"),
+                        lote.optInt("preco"), rotulo, quando, tk, i + 1, n, offline)
+                })
+            }
+        }
+        imprimirTodos()
+        telaConcluida(n, if (n == 1) "ingresso" else "ingressos", total, rotulo, troco, offline, imprimirTodos, false)
     }
 
     // ====================================================================
@@ -1277,6 +1456,7 @@ class MainActivity : AppCompatActivity() {
                 fechar.background = fundo(Cor.VERMELHO, 10)
                 return@setOnClickListener
             }
+            fechar.isEnabled = false
             tirar(janela)
             naRede("Fechando o caixa…", {
                 Api.chamar(local.token, "fechar_caixa", JSONObject()
@@ -1294,7 +1474,16 @@ class MainActivity : AppCompatActivity() {
         janela = folha("Fechar caixa · ${primeiroNome(operadorNome)}", c)
     }
 
+    /**
+     * Depois de fechar, esta tela SUBSTITUI a do caixa (não fica por cima dela):
+     * assim nem o CONCLUIR nem o botão voltar levam de novo a um caixa que já
+     * foi fechado.
+     */
     private fun telaCaixaFechado(r: JSONObject) {
+        caixa = null
+        operadorId = null
+        carrinho.clear()
+        vGrade = null; vStatus = null
         val dif = r.optInt("entregue") - r.optInt("esperado")
         val c = coluna().apply {
             setBackgroundColor(Cor.CARVAO)
@@ -1314,12 +1503,19 @@ class MainActivity : AppCompatActivity() {
             if (dif > 0) 0xFF8FC1EA.toInt() else 0xFFF09B91.toInt()))
         c.addView(b, cheio())
         c.addView(botao("CONCLUIR", Cor.BRANCO, Cor.CARVAO, 18f, 56) { sair() }, cheio().apply { topMargin = dp(24) })
-        c.addView(texto("Imprimir o relatório de novo", 15f, Cor.CLARO, false, true).apply {
-            setPadding(0, dp(16), 0, dp(4))
-            setOnClickListener { imprimirEmFundo({ Impressos.fechamento(local.nomeEvento, r, dataHoraBrasilia()) }) }
-        })
+        val reimprimir = texto("Imprimir o relatório de novo", 15f, Cor.CLARO, false, true).apply {
+            setPadding(0, dp(28), 0, dp(4))
+        }
+        var confirmar = false
+        reimprimir.setOnClickListener {
+            if (!confirmar) { confirmar = true; reimprimir.text = "Toque de novo para imprimir outra via"; return@setOnClickListener }
+            confirmar = false
+            reimprimir.text = "Imprimir o relatório de novo"
+            imprimirEmFundo({ Impressos.fechamento(local.nomeEvento, r, dataHoraBrasilia()) })
+        }
+        c.addView(reimprimir)
         tirarCamadas()
-        empilhar(c)
+        base(c)
     }
 
     // ====================================================================

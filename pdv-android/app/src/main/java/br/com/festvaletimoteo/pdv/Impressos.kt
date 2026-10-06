@@ -172,6 +172,30 @@ object Impressos {
         return p.desenhar()
     }
 
+    /**
+     * Ingresso vendido na portaria — um por pessoa. O QR é o mesmo tipo do
+     * ingresso do site e é lido pela tela de validação da entrada.
+     */
+    fun ingresso(evento: String, tipo: String, lote: String, preco: Int, meio: String, quando: String,
+                 token: String, numero: Int, de: Int, offline: Boolean): Bitmap {
+        val p = Papel()
+        p.cabecalho(logo, "INGRESSO", evento)
+        p.tracejado()
+        p.espaco(4f)
+        p.centro("ENTRADA", 34f, true)
+        p.centro("$tipo · $lote", 20f, true)
+        p.espaco(4f)
+        p.linha(meio, brl(preco), 20f)
+        p.linha(quando, "$numero de $de", 18f)
+        p.espaco(6f)
+        p.qr(token, 240)
+        p.centro(token.uppercase().chunked(4).joinToString(" "), 15f, true)
+        if (offline) p.centro("(registrado sem internet)", 15f)
+        p.espaco(8f)
+        p.centro("Válido para 1 pessoa. Apresente na entrada.", 16f)
+        return p.desenhar()
+    }
+
     /** Recibo de entrega de dinheiro no meio da festa — sai em duas vias. */
     fun reciboSangria(operador: String, valor: Int, quando: String,
                       recebidoPor: String, naGaveta: Int, via: String): Bitmap {

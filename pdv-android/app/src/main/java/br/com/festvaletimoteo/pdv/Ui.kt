@@ -44,6 +44,7 @@ fun corDaCategoria(c: String): Int = when (c) {
     "Sem álcool" -> Cor.AZUL
     "Drinks" -> Cor.VERMELHO
     "Comida" -> Cor.VERDE
+    "Ingresso" -> 0xFF7A5CC4.toInt()
     else -> Cor.MUDO
 }
 

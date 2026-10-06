@@ -69,7 +69,8 @@ class Local(contexto: Context) {
         while (a.length() > 0) {
             val venda = a.getJSONObject(0)
             try {
-                Api.chamar(tok, "vender", venda)
+                // Venda do bar ou ingresso da portaria: a ação vai junto na fila.
+                Api.chamar(tok, venda.optString("_fila_acao", "vender"), venda)
             } catch (e: ErroApi) {
                 if (e.semRede) break
                 val r = recusadas()
