@@ -297,58 +297,80 @@ export const FEST = {
     titulo: "Quem faz o Fest Vale acontecer",
     intro:
       "O Fest Vale só existe porque empresas da região decidem colocar o nome delas em uma festa que devolve o resultado para a cidade. " +
-      "A renda do evento sustenta as ações sociais mantidas pela Loja Maçônica Acácia de Acesita no Vale do Aço — " +
-      "cada cota de patrocínio vira estrutura, e cada ingresso vendido vira trabalho social.",
+      "Toda a renda do evento vai para o trabalho filantrópico da Loja Maçônica Acácia de Acesita e da Fraternidade Feminina " +
+      "Cruzeiro do Sul Acácia de Acesita, com famílias de baixa renda e instituições como asilos e creches do Vale do Aço.",
+    /** Número de destaque da última edição. */
+    publico: "+2 mil",
+    publicoLegenda: "pessoas na 3ª edição, em 2026",
     /**
-     * O que cada cota entrega. PROPOSTA — conferir com a diretoria antes
-     * de usar como argumento de venda. Ordem: da maior para a menor.
+     * Carta de patrocínio em PDF (A4, 6 páginas), a mesma que vai impressa.
+     * Ao trocar o arquivo, mude também o nome, para ninguém baixar a versão velha do cache.
+     */
+    cartaPdf: "/docs/carta-de-patrocinio-4-fest-vale.pdf",
+    /**
+     * Cotas da carta de patrocínio (outubro de 2026), da maior para a menor.
+     * `itens` repete exatamente o que a carta impressa promete.
      */
     cotas: [
       {
-        nome: "Master",
-        resumo: "Assina o evento",
+        nome: "Chancela de Apresentação",
+        preco: "R$ 6.000",
+        resumo: "Sua marca apresenta o evento",
+        ingressos: 10,
         itens: [
-          "Marca ao lado da logo do festival no topo do site, assinando o evento",
-          "Logo em destaque em toda a comunicação e no material impresso",
-          "Espaço no palco e citação da locução durante o evento",
-          "Exclusividade de segmento",
+          "Marca como apresentadora do evento em todas as mídias",
+          "Espaço para stand no evento",
+          "Outdoor",
+          "Carro de som e moto de som",
+          "Chamadas de rádio",
+          "Adesivo microperfurado no vidro traseiro de carros",
+          "Camisa da organização",
+          "Backdrop, cartazes, redes sociais e site",
         ],
       },
       {
-        nome: "Ouro",
-        resumo: "Presença forte",
+        nome: "Cota Ouro",
+        preco: "R$ 3.000",
+        resumo: "Presença forte, da rua ao palco",
+        ingressos: 7,
         itens: [
-          "Logo em destaque na página de patrocinadores e na home",
-          "Marca em todo o material de divulgação",
-          "Citação da locução durante o evento",
-          "Espaço para ativação da marca no local",
+          "Espaço para stand no evento",
+          "Outdoor",
+          "Carro de som e moto de som",
+          "Camisa da organização",
+          "Backdrop, cartazes, redes sociais e site",
         ],
       },
       {
-        nome: "Prata",
-        resumo: "Boa visibilidade",
-        itens: [
-          "Logo na página de patrocinadores e na home",
-          "Marca no material de divulgação",
-          "Citação da locução durante o evento",
-        ],
+        nome: "Cota Prata",
+        preco: "R$ 2.000",
+        resumo: "Marca na camisa da organização",
+        ingressos: 5,
+        itens: ["Camisa da organização", "Backdrop, cartazes, redes sociais e site"],
       },
       {
-        nome: "Bronze",
-        resumo: "Marca presente",
-        itens: [
-          "Logo na página de patrocinadores e na home",
-          "Menção nas redes sociais do evento",
-        ],
+        nome: "Cota Bronze",
+        preco: "R$ 1.000",
+        resumo: "Marca presente no evento",
+        ingressos: 3,
+        itens: ["Backdrop, cartazes, redes sociais e site"],
       },
       {
-        nome: "Cobre",
-        resumo: "Apoio institucional",
-        itens: [
-          "Logo na página de patrocinadores",
-          "Menção nas redes sociais do evento",
-        ],
+        nome: "Cota Cobre",
+        preco: "R$ 500",
+        resumo: "Apoio à causa",
+        ingressos: 2,
+        itens: ["Backdrop, cartazes, redes sociais e site"],
       },
+    ],
+    /** Peças onde a marca aparece. Imagens ilustrativas da carta de patrocínio. */
+    midias: [
+      { titulo: "Outdoor", cotas: "Chancela e Ouro", imagem: "/img/patrocinio/outdoor.webp" },
+      { titulo: "Backdrop no dia do evento", cotas: "Todas as cotas", imagem: "/img/patrocinio/backdrop.webp" },
+      { titulo: "Cartaz", cotas: "Todas as cotas", imagem: "/img/patrocinio/cartaz.webp" },
+      { titulo: "Camisa da organização", cotas: "Chancela, Ouro e Prata", imagem: "/img/patrocinio/camisa.webp" },
+      { titulo: "Adesivo de carro", cotas: "Microperfurado, no vidro traseiro · Chancela", imagem: "/img/patrocinio/adesivo-carro.webp" },
+      { titulo: "Redes sociais", cotas: "Todas as cotas · @festvaletimoteo", imagem: "/img/patrocinio/redes-sociais.webp" },
     ],
   },
 
