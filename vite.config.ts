@@ -13,7 +13,13 @@ export default defineConfig({
     tanstackStart({
       server: { entry: "server" },
       spa: { enabled: true },
-      prerender: { enabled: true, crawlLinks: true },
+      prerender: {
+        enabled: true,
+        crawlLinks: true,
+        // Arquivos de /docs (PDFs) são estáticos: o crawler não pode reescrevê-los,
+        // senão o PDF sai corrompido no build.
+        filter: ({ path }: { path: string }) => !path.startsWith("/docs/"),
+      },
     }),
     viteReact(),
   ],
