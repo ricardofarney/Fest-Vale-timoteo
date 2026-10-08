@@ -153,10 +153,11 @@ Deno.serve(async (req) => {
       // dados é o comprador, dentro da página do PagBank.
       items: itensFinal,
       // Débito exige aprovação interna prévia do PagBank — fica de fora por ora.
+      // Boleto fora por decisão da organização (08/10/2026): leva até 2 dias
+      // úteis para compensar e o ingresso só sai depois disso.
       payment_methods: [
         { type: "CREDIT_CARD" },
         { type: "PIX" },
-        { type: "BOLETO" },
       ],
       // Sem INTEREST_FREE_INSTALLMENTS: por padrão do PagBank, os juros do
       // parcelamento são pagos pelo comprador — que é a regra do Fest Vale.
@@ -182,6 +183,17 @@ Deno.serve(async (req) => {
     });
 
     const dados = await res.json().catch(() => ({}));
+
+    // Registro para a homologação do PagBank: eles exigem os logs de requisição
+    // e resposta. Não há dado do comprador aqui — o corpo que enviamos não tem
+    // "customer" — e o token nunca é registrado. Desligar depois da aprovação.
+    console.log("HOMOLOGACAO " + JSON.stringify({
+      endpoint: `POST ${API}/checkouts`,
+      http_status: res.status,
+      request: corpo,
+      response: dados,
+    }));
+
     if (!res.ok) {
       console.error("pagbank /checkouts:", res.status, JSON.stringify(dados));
       const primeiro = (dados?.error_messages ?? [])[0];
