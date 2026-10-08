@@ -156,7 +156,7 @@ function CheckoutPage() {
         </h1>
         <p className="mt-3 text-sm text-muted-foreground">
           {retorno === "pendente"
-            ? "Boleto e alguns cartões levam mais tempo para compensar. Assim que o PagBank confirmar, seu ingresso chega por e-mail automaticamente."
+            ? "Alguns pagamentos com cartão passam por análise e levam mais tempo. Assim que o PagBank confirmar, seu ingresso chega por e-mail automaticamente."
             : "Isso costuma levar poucos segundos. Pode deixar esta página aberta — ela se atualiza sozinha."}
         </p>
         <p className="mt-6 text-xs text-muted-foreground">
@@ -343,7 +343,7 @@ function CheckoutPage() {
           <div className="mt-4 space-y-2 text-xs text-muted-foreground">
             <p className="flex items-start gap-2">
               <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              Pix, cartão e boleto são processados dentro do PagBank. Nenhum dado de pagamento passa por este site.
+              Pix e cartão são processados dentro do PagBank. Nenhum dado de pagamento passa por este site.
             </p>
             <p className="flex items-start gap-2">
               <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
