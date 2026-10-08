@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { FEST, absUrl, NIVEIS_PATROCINIO, NIVEL_INFO } from "@/lib/fest";
 import { BotaoWhatsapp } from "@/components/botao-whatsapp";
-import { ArrowLeft, Check, Handshake, Ticket } from "lucide-react";
+import { ArrowLeft, Check, FileDown, Handshake, Ticket } from "lucide-react";
 
 export const Route = createFileRoute("/patrocinadores")({
   head: () => ({
@@ -32,6 +32,7 @@ function PaginaPatrocinadores() {
     .map((n) => ({ nivel: n, itens: lista.filter((p) => p.nivel === n) }))
     .filter((g) => g.itens.length > 0);
 
+  const pagina = FEST.patrocinioPagina;
   const whatsapp: string = FEST.contato.whatsapp;
   const email: string = FEST.contato.email;
   const contato = whatsapp
@@ -94,33 +95,38 @@ function PaginaPatrocinadores() {
         )}
 
         {/* ───────────────────────────────────────────────────── cotas */}
-        <section>
+        <section id="cotas" className="scroll-mt-24">
           <div className="text-center">
             <div className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
               Cotas de patrocínio
             </div>
             <h2 className="mt-3 font-display text-3xl font-bold md:text-4xl">
-              O que cada cota entrega
+              Cinco formas de participar
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              Há cotas abertas para o {FEST.edicaoLabel}, em {FEST.dataLabel}. Fale com a organização
-              para receber os valores e o material completo.
+              Cotas para o {FEST.edicaoLabel}, em {FEST.dataLabel}. Quanto maior a cota, em mais lugares
+              a sua marca aparece, antes e durante a festa.
             </p>
+            <div className="mt-6 inline-flex items-baseline gap-3 rounded-full border border-border/60 bg-card/50 px-5 py-2">
+              <span className="whitespace-nowrap font-display text-2xl font-bold text-primary">{pagina.publico}</span>
+              <span className="text-sm text-muted-foreground">{pagina.publicoLegenda}</span>
+            </div>
           </div>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-            {FEST.patrocinioPagina.cotas.map((c, i) => (
+            {pagina.cotas.map((c, i) => (
               <div
                 key={c.nome}
-                className={`flex flex-col rounded-2xl border p-7 ${
+                className={`flex flex-col rounded-2xl border p-6 ${
                   i === 0
                     ? "border-primary/40 bg-gradient-to-b from-primary/10 to-transparent"
                     : "border-border/60 bg-card/50"
                 }`}
               >
-                <h3 className="font-display text-2xl font-bold">{c.nome}</h3>
+                <h3 className="font-display text-xl font-bold leading-tight">{c.nome}</h3>
+                <div className="mt-2 font-display text-3xl font-bold tabular-nums">{c.preco}</div>
                 <p className="mt-1 text-sm text-muted-foreground">{c.resumo}</p>
-                <ul className="mt-6 space-y-3">
+                <ul className="mt-5 flex-1 space-y-2.5">
                   {c.itens.map((item) => (
                     <li key={item} className="flex gap-2.5 text-sm leading-relaxed">
                       <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -128,9 +134,62 @@ function PaginaPatrocinadores() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-5 flex items-center gap-2 border-t border-border/60 pt-4 text-sm">
+                  <Ticket className="h-4 w-4 text-primary" />
+                  <span>
+                    <strong className="font-semibold">{c.ingressos}</strong> ingressos de cortesia
+                  </span>
+                </div>
               </div>
             ))}
           </div>
+
+          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button size="lg" variant="outline" asChild>
+              <a href={pagina.cartaPdf} download target="_blank" rel="noreferrer">
+                <FileDown className="mr-2 h-4 w-4" />
+                Baixar a carta de patrocínio (PDF)
+              </a>
+            </Button>
+            {contato && (
+              <Button size="lg" asChild>
+                <a href={contato} target="_blank" rel="noreferrer">
+                  {FEST.patrocinioCta.contatoLabel}
+                </a>
+              </Button>
+            )}
+          </div>
+        </section>
+
+        {/* ──────────────────────────────────────── onde a marca aparece */}
+        <section>
+          <div className="text-center">
+            <div className="text-xs font-medium uppercase tracking-[0.2em] text-primary">
+              Onde a sua marca aparece
+            </div>
+            <h2 className="mt-3 font-display text-3xl font-bold md:text-4xl">Da rua ao palco</h2>
+          </div>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {pagina.midias.map((m) => (
+              <figure key={m.titulo} className="min-w-0">
+                <div className="overflow-hidden rounded-2xl border border-border/60 bg-white">
+                  <img
+                    src={m.imagem}
+                    alt={m.titulo}
+                    loading="lazy"
+                    className="aspect-[16/10] w-full object-contain"
+                  />
+                </div>
+                <figcaption className="mt-3">
+                  <div className="font-display font-semibold">{m.titulo}</div>
+                  <div className="text-sm text-muted-foreground">{m.cotas}</div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            Peças ilustrativas. As artes finais trazem as marcas dos patrocinadores confirmados.
+          </p>
         </section>
 
         {/* ───────────────────────────────────────────────── chamada */}
