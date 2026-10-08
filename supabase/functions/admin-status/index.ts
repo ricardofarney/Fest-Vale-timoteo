@@ -15,6 +15,25 @@ const json = (b: unknown, s = 200) =>
 /** Só informa se existe e não está vazio. O valor nunca é devolvido. */
 const tem = (nome: string) => (Deno.env.get(nome) ?? "").trim().length > 0;
 
+/** Testa a chave da Brevo de verdade, consultando a conta (não envia e-mail).
+ *  Devolve só o resultado do teste; a chave nunca sai daqui. */
+async function testarBrevo(): Promise<{ ok: boolean; detalhe: string }> {
+  const cru = Deno.env.get("BREVO_API_KEY") ?? "";
+  const linhas = cru.split(/[\r\n]+/).map((l) => l.trim()).filter(Boolean);
+  if (!linhas.length) return { ok: false, detalhe: "não cadastrada" };
+  try {
+    const r = await fetch("https://api.brevo.com/v3/account", {
+      headers: { "api-key": linhas[linhas.length - 1], accept: "application/json" },
+    });
+    if (!r.ok) return { ok: false, detalhe: `a Brevo recusou a chave (HTTP ${r.status})` };
+    return linhas.length > 1
+      ? { ok: true, detalhe: "funciona, mas foi colada com mais de uma linha" }
+      : { ok: true, detalhe: "testada agora: funcionando" };
+  } catch {
+    return { ok: false, detalhe: "não foi possível falar com a Brevo agora" };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
@@ -39,6 +58,8 @@ Deno.serve(async (req) => {
     });
     if (pode !== true) return json({ error: "Sem permissão" }, 403);
 
+    const brevo = await testarBrevo();
+
     const grupos = [
       {
         chave: "pagamento",
@@ -55,7 +76,7 @@ Deno.serve(async (req) => {
         nome: "E-mail do ingresso — Brevo",
         descricao: "Sem isto, o comprador não recebe o ingresso com o QR Code.",
         itens: [
-          { nome: "BREVO_API_KEY", rotulo: "Chave da Brevo", ok: tem("BREVO_API_KEY") },
+          { nome: "BREVO_API_KEY", rotulo: "Chave da Brevo", ok: brevo.ok, detalhe: brevo.detalhe },
           { nome: "INTERNAL_KEY", rotulo: "Chave interna", ok: tem("INTERNAL_KEY") },
           { nome: "EMAIL_REMETENTE", rotulo: "Remetente", ok: tem("EMAIL_REMETENTE"), opcional: true },
         ],
