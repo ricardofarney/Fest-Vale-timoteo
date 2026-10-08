@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/admin/integracoes")({
   component: Integracoes,
 });
 
-type Item = { nome: string; rotulo: string; ok: boolean; opcional?: boolean };
+type Item = { nome: string; rotulo: string; ok: boolean; opcional?: boolean; detalhe?: string };
 type Grupo = { chave: string; nome: string; descricao: string; itens: Item[]; pronto: boolean; faltam: number };
 type Status = { grupos: Grupo[]; webhooks: Record<string, string>; verificado_em: string };
 
@@ -89,6 +89,7 @@ function Integracoes() {
                   <span className={i.ok ? "" : "text-muted-foreground"}>
                     {i.rotulo}
                     {i.opcional && !i.ok && " (opcional)"}
+                    {i.detalhe && <span className="text-xs text-muted-foreground"> · {i.detalhe}</span>}
                   </span>
                   <code className="ml-auto shrink-0 rounded bg-secondary/60 px-1.5 py-0.5 text-[11px] text-muted-foreground">
                     {i.nome}
