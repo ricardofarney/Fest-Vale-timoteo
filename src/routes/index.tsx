@@ -277,11 +277,7 @@ function Atracoes() {
                     <img
                       src={a.imagem}
                       alt={`Banda ${a.nome}`}
-                      className={
-                        a.imagemFoto
-                          ? "h-full w-full object-cover object-center"
-                          : "h-full w-full object-contain object-bottom p-4 md:p-6"
-                      }
+                      className="h-full w-full object-contain object-bottom p-4 md:p-6"
                       loading="lazy"
                     />
                   ) : (
@@ -293,13 +289,7 @@ function Atracoes() {
 
                 <div className="flex flex-col justify-center p-8 md:p-10">
                   <div className="text-xs font-medium uppercase tracking-wider text-primary">{a.papel}</div>
-                  <h3 className="mt-2 font-display text-4xl font-bold md:text-5xl">
-                    {a.logo ? (
-                      <img src={a.logo} alt={a.nome} className="mt-1 h-20 w-auto md:h-24" loading="lazy" />
-                    ) : (
-                      a.nome
-                    )}
-                  </h3>
+                  <h3 className="mt-2 font-display text-4xl font-bold md:text-5xl">{a.nome}</h3>
 
                   {a.tags && a.tags.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -328,12 +318,27 @@ function Atracoes() {
                         Integrantes
                       </div>
                       <ul className="mt-2 grid gap-1 text-sm sm:grid-cols-2">
-                        {a.integrantes.map((m) => (
-                          <li key={m} className="flex items-start gap-2">
-                            <Music4 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70" />
-                            <span>{m}</span>
-                          </li>
-                        ))}
+                        {a.integrantes.map((item) => {
+                          const m = typeof item === "string" ? { nome: item, instagram: undefined } : item;
+                          return (
+                            <li key={m.nome} className="flex items-start gap-2">
+                              <Music4 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/70" />
+                              <span>
+                                {m.nome}
+                                {m.instagram && (
+                                  <a
+                                    href={`https://www.instagram.com/${m.instagram}/`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="ml-1.5 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+                                  >
+                                    <Instagram className="h-3 w-3" />@{m.instagram}
+                                  </a>
+                                )}
+                              </span>
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   )}
