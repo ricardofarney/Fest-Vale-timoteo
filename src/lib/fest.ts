@@ -162,7 +162,7 @@ export const FEST = {
         { tipo: "youtube", url: "https://www.youtube.com/@grupopolivalencia1493", label: "Grupo Polivalência" },
       ],
       videoId: "Wom_IbxjEiw",
-      // Foto de palco (Arena do Samba, jan/2026) com a logo da banda aplicada,
+      // Foto oficial enviada pela banda (out/2026), recortada, com a logo aplicada,
       // no mesmo formato da imagem da Gertrudes (3:2). Uso autorizado pela banda.
       imagem: "/img/polivalencia-banda.webp",
       destaque: true,
