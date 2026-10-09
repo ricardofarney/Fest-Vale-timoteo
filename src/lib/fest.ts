@@ -151,16 +151,20 @@ export const FEST = {
       papel: "Abre a noite",
       descricao:
         "O Grupo Polivalência, o Poli para quem acompanha, é sucesso de público nos shows e festas do Vale do Aço. Já tocou na 3ª edição e volta ao Fest Vale para abrir a noite de 2027.",
+      bio: [
+        "Samba e pagode do jeito que a roda pede: repertório para cantar junto, com a energia de quem está acostumado a segurar a festa do começo ao fim.",
+        "A agenda passa por palcos de toda a região, da festa de 61 anos de Ipatinga, na Feirarte do Parque Ipanema, à Arena do Samba, e o grupo reúne mais de 12 mil seguidores no Instagram.",
+      ],
+      // Integrantes: aguardando nomes, instrumentos e @ do Instagram (pedido ao Ricardo em 09/10/2026).
       tags: ["Samba", "Pagode"],
       redes: [
         { tipo: "instagram", url: "https://www.instagram.com/grupopolivalencia/", label: "@grupopolivalencia" },
         { tipo: "youtube", url: "https://www.youtube.com/@grupopolivalencia1493", label: "Grupo Polivalência" },
       ],
       videoId: "Wom_IbxjEiw",
-      // Foto de palco (Arena do Samba, jan/2026), uso autorizado pela banda.
+      // Foto de palco (Arena do Samba, jan/2026) com a logo da banda aplicada,
+      // no mesmo formato da imagem da Gertrudes (3:2). Uso autorizado pela banda.
       imagem: "/img/polivalencia-banda.webp",
-      imagemFoto: true,
-      logo: "/img/polivalencia-logo.webp",
       destaque: true,
     },
   ] as ReadonlyArray<{
@@ -170,14 +174,11 @@ export const FEST = {
     imagem: string;
     destaque: boolean;
     bio?: readonly string[];
-    integrantes?: readonly string[];
+    /** "Nome — instrumento", ou { nome: "Nome — instrumento", instagram: "usuario" } para mostrar o link. */
+    integrantes?: ReadonlyArray<string | { nome: string; instagram?: string }>;
     tags?: readonly string[];
     redes?: ReadonlyArray<{ tipo: "instagram" | "youtube" | "spotify" | "site"; url: string; label: string }>;
     videoId?: string;
-    /** Logo da banda em branco, fundo transparente. Aparece no lugar do nome. */
-    logo?: string;
-    /** true quando `imagem` é uma foto retangular (preenche o quadro), não um recorte. */
-    imagemFoto?: boolean;
   }>,
 
   /**
