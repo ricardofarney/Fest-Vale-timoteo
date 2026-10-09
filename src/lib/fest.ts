@@ -150,8 +150,11 @@ export const FEST = {
       nome: "Polivalência",
       papel: "Abre a noite",
       descricao:
-        "Sucesso de público no Vale do Aço, a Polivalência já tocou na 3ª edição e volta ao Fest Vale para abrir a noite de 2027.",
-      // Falta a foto da banda (fundo transparente, como a da Gertrudes) e as redes sociais.
+        "O Grupo Polivalência, o Poli para quem acompanha, é sucesso de público nos shows e festas do Vale do Aço. Já tocou na 3ª edição e volta ao Fest Vale para abrir a noite de 2027.",
+      redes: [
+        { tipo: "instagram", url: "https://www.instagram.com/grupopolivalencia/", label: "@grupopolivalencia" },
+      ],
+      // Falta a foto da banda (fundo transparente, como a da Gertrudes).
       imagem: "",
       destaque: true,
     },
