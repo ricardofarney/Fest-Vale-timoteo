@@ -151,11 +151,16 @@ export const FEST = {
       papel: "Abre a noite",
       descricao:
         "O Grupo Polivalência, o Poli para quem acompanha, é sucesso de público nos shows e festas do Vale do Aço. Já tocou na 3ª edição e volta ao Fest Vale para abrir a noite de 2027.",
+      tags: ["Samba", "Pagode"],
       redes: [
         { tipo: "instagram", url: "https://www.instagram.com/grupopolivalencia/", label: "@grupopolivalencia" },
+        { tipo: "youtube", url: "https://www.youtube.com/@grupopolivalencia1493", label: "Grupo Polivalência" },
       ],
-      // Falta a foto da banda (fundo transparente, como a da Gertrudes).
-      imagem: "",
+      videoId: "Wom_IbxjEiw",
+      // Foto de palco (Arena do Samba, jan/2026), uso autorizado pela banda.
+      imagem: "/img/polivalencia-banda.webp",
+      imagemFoto: true,
+      logo: "/img/polivalencia-logo.webp",
       destaque: true,
     },
   ] as ReadonlyArray<{
@@ -169,6 +174,10 @@ export const FEST = {
     tags?: readonly string[];
     redes?: ReadonlyArray<{ tipo: "instagram" | "youtube" | "spotify" | "site"; url: string; label: string }>;
     videoId?: string;
+    /** Logo da banda em branco, fundo transparente. Aparece no lugar do nome. */
+    logo?: string;
+    /** true quando `imagem` é uma foto retangular (preenche o quadro), não um recorte. */
+    imagemFoto?: boolean;
   }>,
 
   /**
