@@ -31,7 +31,7 @@ export const Route = createFileRoute("/")({
       { title: `${FEST.nome} ${FEST.cidade} ${FEST.edicaoLabel} — ${FEST.dataLabel}` },
       {
         name: "description",
-        content: `${FEST.edicaoLabel} do ${FEST.nome} ${FEST.cidade}, dia ${FEST.dataLabel}, com a banda Gertrudes. Realização da ${FEST.realizador.nome}. Ingressos no site oficial.`,
+        content: `${FEST.edicaoLabel} do ${FEST.nome} ${FEST.cidade}, dia ${FEST.dataLabel}, com as bandas Polivalência e Gertrudes. Realização da ${FEST.realizador.nome}. Ingressos no site oficial.`,
       },
     ],
   }),
@@ -195,7 +195,8 @@ function Hero() {
             <span>{FEST.cidade}/{FEST.estado}</span>
             <span className="text-border">|</span>
             <span>
-              com a banda <span className="font-semibold text-foreground">Gertrudes</span>
+              com <span className="font-semibold text-foreground">Polivalência</span> e{" "}
+              <span className="font-semibold text-foreground">Gertrudes</span>
             </span>
           </div>
 

@@ -58,7 +58,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 const FEST_TITLE = `${FEST.nome} ${FEST.cidade} ${FEST.edicaoLabel} — ${FEST.dataLabel}`;
-const FEST_DESC = `${FEST.edicaoLabel} do ${FEST.nome} ${FEST.cidade}, dia ${FEST.dataLabel}, com a banda Gertrudes. Realização da ${FEST.realizador.nome}. Ingressos digitais no site oficial.`;
+const FEST_DESC = `${FEST.edicaoLabel} do ${FEST.nome} ${FEST.cidade}, dia ${FEST.dataLabel}, com as bandas Polivalência e Gertrudes. Realização da ${FEST.realizador.nome}. Ingressos digitais no site oficial.`;
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
