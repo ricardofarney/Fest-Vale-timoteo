@@ -124,7 +124,7 @@ export const FEST = {
   atracoes: [
     {
       nome: "Gertrudes",
-      papel: "1ª banda confirmada",
+      papel: "Fecha a noite",
       descricao:
         "Nome tradicional do Vale do Aço, a Gertrudes construiu sua reputação tocando clássicos do rock com execução precisa — e é ela que fecha a noite do Fest Vale.",
       bio: [
@@ -147,18 +147,13 @@ export const FEST = {
       destaque: true,
     },
     {
-      nome: "Atração a confirmar",
-      papel: "Line-up em construção",
-      descricao: "Mais nomes serão anunciados nas próximas semanas.",
+      nome: "Polivalência",
+      papel: "Abre a noite",
+      descricao:
+        "Sucesso de público no Vale do Aço, a Polivalência já tocou na 3ª edição e volta ao Fest Vale para abrir a noite de 2027.",
+      // Falta a foto da banda (fundo transparente, como a da Gertrudes) e as redes sociais.
       imagem: "",
-      destaque: false,
-    },
-    {
-      nome: "Atração a confirmar",
-      papel: "Line-up em construção",
-      descricao: "Mais nomes serão anunciados nas próximas semanas.",
-      imagem: "",
-      destaque: false,
+      destaque: true,
     },
   ] as ReadonlyArray<{
     nome: string;
