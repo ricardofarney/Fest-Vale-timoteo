@@ -277,7 +277,11 @@ function Atracoes() {
                     <img
                       src={a.imagem}
                       alt={`Banda ${a.nome}`}
-                      className="h-full w-full object-contain object-bottom p-4 md:p-6"
+                      className={
+                        a.imagemFoto
+                          ? "h-full w-full object-cover object-center"
+                          : "h-full w-full object-contain object-bottom p-4 md:p-6"
+                      }
                       loading="lazy"
                     />
                   ) : (
@@ -289,7 +293,13 @@ function Atracoes() {
 
                 <div className="flex flex-col justify-center p-8 md:p-10">
                   <div className="text-xs font-medium uppercase tracking-wider text-primary">{a.papel}</div>
-                  <h3 className="mt-2 font-display text-4xl font-bold md:text-5xl">{a.nome}</h3>
+                  <h3 className="mt-2 font-display text-4xl font-bold md:text-5xl">
+                    {a.logo ? (
+                      <img src={a.logo} alt={a.nome} className="mt-1 h-20 w-auto md:h-24" loading="lazy" />
+                    ) : (
+                      a.nome
+                    )}
+                  </h3>
 
                   {a.tags && a.tags.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2">
