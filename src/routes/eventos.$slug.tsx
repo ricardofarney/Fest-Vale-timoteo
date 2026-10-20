@@ -38,6 +38,7 @@ type Batch = {
   aviso: string | null;
   oculto: boolean;
   pontos_venda: string[] | null;
+  arquivado: boolean;
 };
 type TicketType = {
   id: string;
@@ -60,7 +61,7 @@ async function fetchEventBySlug(slug: string) {
   const { data: types } = await supabase
     .from("ticket_types")
     .select(
-      "id, name, description, is_half_price, is_solidary, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, starts_at, ends_at, sort_order, ticket_type_id, canal, a_definir, aviso, oculto, pontos_venda)",
+      "id, name, description, is_half_price, is_solidary, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, starts_at, ends_at, sort_order, ticket_type_id, canal, a_definir, aviso, oculto, pontos_venda, arquivado)",
     )
     .eq("event_id", ev.id)
     .order("sort_order");
@@ -69,7 +70,7 @@ async function fetchEventBySlug(slug: string) {
 
 /** Só o lote que o site vende agora (canal site/todos, já definido, dentro da data e com saldo). */
 function activeBatch(batches: Batch[]): Batch | null {
-  return loteAVenda(batches.filter(visivelNoSite));
+  return loteAVenda(batches.filter((b) => visivelNoSite(b) && !b.arquivado));
 }
 
 function EventPage() {
@@ -192,7 +193,7 @@ function EventPage() {
                 const q = qty[t.id] ?? 0;
                 // Sem lote online: mostra como comprar (lote físico) ou o que vem a seguir.
                 const outros = t.ticket_batches
-                  .filter(visivelNoSite)
+                  .filter((x) => visivelNoSite(x) && !x.arquivado)
                   .sort((x, y) => x.sort_order - y.sort_order)
                   .map((x) => ({ x, estado: estadoDoLote(x) }))
                   .filter(({ estado }) => estado === "fisico" || estado === "em_breve" || estado === "portaria");
@@ -200,8 +201,8 @@ function EventPage() {
                   <div key={t.id} className="rounded-lg border border-border/60 p-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="font-semibold">{t.name}</div>
-                        {b && <div className="text-xs text-muted-foreground">{b.name}</div>}
+                        {types.length > 1 && <div className="font-semibold">{t.name}</div>}
+                        {b && <div className={types.length > 1 ? "text-xs text-muted-foreground" : "font-semibold"}>{b.name}</div>}
                         {t.description && <div className="mt-1 text-xs text-muted-foreground">{t.description}</div>}
                         {b && <div className="mt-2 font-display text-lg text-primary">{brl(b.price_cents)}</div>}
                       </div>

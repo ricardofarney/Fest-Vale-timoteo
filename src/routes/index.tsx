@@ -62,7 +62,7 @@ async function fetchFestEvent() {
   const { data: types } = await supabase
     .from("ticket_types")
     .select(
-      "id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, starts_at, ends_at, canal, a_definir, aviso, oculto, pontos_venda)",
+      "id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, starts_at, ends_at, canal, a_definir, aviso, oculto, pontos_venda, arquivado)",
     )
     .eq("event_id", ev.id)
     .order("sort_order");
@@ -445,7 +445,7 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
   const lotes: Card[] = temEvento
     ? (data!.types as any[]).flatMap((t) =>
         [...(t.ticket_batches ?? [])]
-          .filter(visivelNoSite)
+          .filter((b: any) => visivelNoSite(b) && !b.arquivado)
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
           .map((b: any) => ({
             tipo: t.name as string,
@@ -475,6 +475,8 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
         pontos: [],
       }));
   const algumOnline = lotes.some((l) => l.estado === "a_venda");
+  // Com um tipo só (todos os ingressos iguais), o nome do tipo não aparece.
+  const variosTipos = new Set(lotes.map((l) => l.tipo)).size > 1;
   const proximoOnline = lotes.find((l) => l.online && l.estado === "em_breve");
 
   return (
@@ -502,8 +504,8 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
                       : "border-border/60 bg-card"
                 }`}
               >
-                <div className="text-sm font-medium text-muted-foreground">{l.tipo}</div>
-                <div className="mt-1 font-display text-lg font-semibold">{l.lote}</div>
+                {variosTipos && <div className="text-sm font-medium text-muted-foreground">{l.tipo}</div>}
+                <div className={`font-display text-lg font-semibold ${variosTipos ? "mt-1" : ""}`}>{l.lote}</div>
                 <div className="mt-5 font-display text-3xl font-bold tabular-nums">
                   {l.precoCents > 0 ? (
                     brl(l.precoCents)
