@@ -42,7 +42,7 @@ export const Route = createFileRoute("/")({
       { title: `${FEST.nome} ${FEST.cidade} ${FEST.edicaoLabel} — ${FEST.dataLabel}` },
       {
         name: "description",
-        content: `${FEST.edicaoLabel} do ${FEST.nome} ${FEST.cidade}, dia ${FEST.dataLabel}, com as bandas Polivalência e Gertrudes. Realização da ${FEST.realizador.nome}. Ingressos no site oficial.`,
+        content: `${FEST.edicaoLabel} do ${FEST.nome} ${FEST.cidade}, dia ${FEST.dataLabel}, com as bandas Polivalência e Gertrudes. Realização da ${FEST.realizador.nomeComDa}.`,
       },
     ],
   }),
@@ -245,7 +245,12 @@ function Hero() {
 
           <p className="mt-8 text-sm text-muted-foreground">
             Realização{" "}
-            <span className="font-medium text-foreground">{FEST.realizador.nome}</span>
+            {FEST.realizador.entidades.map((n, i) => (
+              <span key={n}>
+                {i > 0 && " e "}
+                <span className="font-medium text-foreground">{n}</span>
+              </span>
+            ))}
           </p>
         </div>
 
