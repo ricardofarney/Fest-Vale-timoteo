@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { FEST, mapsUrl, NIVEIS_PATROCINIO, NIVEL_INFO } from "@/lib/fest";
 import { BotaoWhatsapp, LinkWhatsapp } from "@/components/botao-whatsapp";
 import { brl } from "@/lib/format";
+import { estadoDoLote, restantesDe, whatsappDoLoteFisico, AVISO_FISICO_PADRAO, type EstadoLote } from "@/lib/lotes";
 import {
   ArrowRight,
   CalendarDays,
   Check,
   HeartHandshake,
+  Lock,
   MapPin,
   Handshake,
   Globe,
@@ -50,7 +52,9 @@ async function fetchFestEvent() {
 
   const { data: types } = await supabase
     .from("ticket_types")
-    .select("id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, ends_at)")
+    .select(
+      "id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, starts_at, ends_at, canal, a_definir, aviso)",
+    )
     .eq("event_id", ev.id)
     .order("sort_order");
 
@@ -417,7 +421,15 @@ function Atracoes() {
 function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> | undefined }) {
   const temEvento = !!data?.ev;
 
-  const lotes = temEvento
+  type Card = {
+    tipo: string;
+    lote: string;
+    precoCents: number;
+    estado: EstadoLote;
+    restantes: number | null;
+    aviso: string | null;
+  };
+  const lotes: Card[] = temEvento
     ? (data!.types as any[]).flatMap((t) =>
         [...(t.ticket_batches ?? [])]
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
@@ -425,12 +437,22 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
             tipo: t.name as string,
             lote: b.name as string,
             precoCents: b.price_cents as number,
-            disponivel: b.quantity_total === 0 || b.quantity_sold < b.quantity_total,
-            restantes: Math.max((b.quantity_total ?? 0) - (b.quantity_sold ?? 0), 0),
-            total: b.quantity_total as number,
-          })),
+            estado: estadoDoLote(b),
+            restantes: restantesDe(b),
+            aviso: (b.aviso as string | null) ?? null,
+          }))
+          // Lote encerrado por data sai da vitrine; esgotado continua aparecendo.
+          .filter((l: Card) => l.estado !== "encerrado"),
       )
-    : FEST.lotesExemplo.map((l) => ({ ...l, restantes: 0, total: 0 }));
+    : FEST.lotesExemplo.map((l) => ({
+        tipo: l.tipo,
+        lote: l.lote,
+        precoCents: l.precoCents,
+        estado: (l.disponivel ? "a_venda" : "esgotado") as EstadoLote,
+        restantes: null,
+        aviso: null,
+      }));
+  const algumOnline = lotes.some((l) => l.estado === "a_venda");
 
   return (
     <section id="ingressos" className="scroll-mt-20 border-y border-border/60 bg-card/30">
@@ -438,41 +460,84 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
         <SectionHead
           eyebrow="Ingressos"
           title="Garanta o seu"
-          subtitle="Ingresso digital com QR Code, direto no seu celular. Lotes viram automaticamente quando esgotam."
+          subtitle="Cada lote tem o seu jeito de comprar. Veja abaixo como garantir o seu ingresso."
         />
 
         <div className="mx-auto mt-10 grid max-w-4xl gap-4 md:grid-cols-3">
-          {lotes.map((l, i) => (
-            <div
-              key={`${l.tipo}-${l.lote}-${i}`}
-              className={`relative flex flex-col rounded-2xl border p-6 ${
-                l.disponivel ? "border-border/60 bg-card" : "border-border/40 bg-card/40 opacity-60"
-              }`}
-            >
-              <div className="text-sm font-medium text-muted-foreground">{l.tipo}</div>
-              <div className="mt-1 font-display text-lg font-semibold">{l.lote}</div>
-              <div className="mt-5 font-display text-3xl font-bold tabular-nums">{brl(l.precoCents)}</div>
-              {l.disponivel ? (
-                <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-success">
-                  <Check className="h-3.5 w-3.5" />
-                  Disponível
-                  {l.total > 0 && l.restantes <= 20 && <span>· últimas {l.restantes} unidades</span>}
+          {lotes.map((l, i) => {
+            const apagado = l.estado === "esgotado" || l.estado === "encerrado";
+            const whats = l.estado === "fisico" ? whatsappDoLoteFisico(l.lote) : null;
+            return (
+              <div
+                key={`${l.tipo}-${l.lote}-${i}`}
+                className={`relative flex flex-col rounded-2xl border p-6 ${
+                  l.estado === "fisico"
+                    ? "border-primary/40 bg-gradient-to-b from-primary/10 to-card"
+                    : apagado
+                      ? "border-border/40 bg-card/40 opacity-60"
+                      : "border-border/60 bg-card"
+                }`}
+              >
+                <div className="text-sm font-medium text-muted-foreground">{l.tipo}</div>
+                <div className="mt-1 font-display text-lg font-semibold">{l.lote}</div>
+                <div className="mt-5 font-display text-3xl font-bold tabular-nums">
+                  {l.estado === "em_breve" ? (
+                    <span className="text-2xl text-muted-foreground">Valor a definir</span>
+                  ) : (
+                    brl(l.precoCents)
+                  )}
                 </div>
-              ) : (
-                <div className="mt-2 text-xs text-muted-foreground">Esgotado</div>
-              )}
-            </div>
-          ))}
+
+                {l.estado === "a_venda" && (
+                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-success">
+                    <Check className="h-3.5 w-3.5" />
+                    À venda no site
+                    {l.restantes !== null && l.restantes <= 20 && <span>· últimas {l.restantes} unidades</span>}
+                  </div>
+                )}
+                {l.estado === "portaria" && (
+                  <div className="mt-2 text-xs text-muted-foreground">Vendido só na portaria, no dia do evento</div>
+                )}
+                {l.estado === "em_breve" && <div className="mt-2 text-xs text-muted-foreground">Em breve</div>}
+                {l.estado === "esgotado" && <div className="mt-2 text-xs text-muted-foreground">Esgotado</div>}
+                {l.estado === "encerrado" && <div className="mt-2 text-xs text-muted-foreground">Encerrado</div>}
+
+                {l.estado === "fisico" && (
+                  <>
+                    <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
+                      <Lock className="h-3.5 w-3.5" />
+                      Venda física
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                      {l.aviso || AVISO_FISICO_PADRAO}
+                    </p>
+                    {whats && (
+                      <Button size="sm" className="mt-4 w-full" asChild>
+                        <a href={whats} target="_blank" rel="noopener noreferrer">
+                          <MessageCircle className="mr-2 h-4 w-4" />
+                          Quero comprar pelo WhatsApp
+                        </a>
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <div className="mx-auto mt-8 flex max-w-4xl flex-col items-center gap-3">
-          {temEvento ? (
+          {temEvento && algumOnline ? (
             <Button size="lg" asChild>
               <Link to="/eventos/$slug" params={{ slug: FEST.slug }}>
                 Comprar ingresso
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
+          ) : temEvento ? (
+            <p className="text-center text-sm text-muted-foreground">
+              A venda pelo site abre no próximo lote. Fique de olho aqui e no nosso Instagram.
+            </p>
           ) : (
             <>
               <Button size="lg" disabled>

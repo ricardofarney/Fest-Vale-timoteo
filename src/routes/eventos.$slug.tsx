@@ -3,11 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Calendar, MapPin, ArrowLeft, Minus, Plus } from "lucide-react";
+import { Calendar, MapPin, ArrowLeft, Minus, Plus, Lock, MessageCircle } from "lucide-react";
 import { brl, fmtDateTime } from "@/lib/format";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { estadoDoLote, loteAVenda, restantesDe, whatsappDoLoteFisico, AVISO_FISICO_PADRAO } from "@/lib/lotes";
 
 export const Route = createFileRoute("/eventos/$slug")({
   component: EventPage,
@@ -23,6 +24,9 @@ type Batch = {
   ends_at: string | null;
   sort_order: number;
   ticket_type_id: string;
+  canal: string;
+  a_definir: boolean;
+  aviso: string | null;
 };
 type TicketType = {
   id: string;
@@ -45,22 +49,16 @@ async function fetchEventBySlug(slug: string) {
   const { data: types } = await supabase
     .from("ticket_types")
     .select(
-      "id, name, description, is_half_price, is_solidary, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, starts_at, ends_at, sort_order, ticket_type_id)",
+      "id, name, description, is_half_price, is_solidary, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, starts_at, ends_at, sort_order, ticket_type_id, canal, a_definir, aviso)",
     )
     .eq("event_id", ev.id)
     .order("sort_order");
   return { event: ev, types: (types ?? []) as TicketType[] };
 }
 
+/** Só o lote que o site vende agora (canal site/todos, já definido, dentro da data e com saldo). */
 function activeBatch(batches: Batch[]): Batch | null {
-  const now = Date.now();
-  const sorted = [...batches].sort((a, b) => a.sort_order - b.sort_order);
-  for (const b of sorted) {
-    const s = b.starts_at ? new Date(b.starts_at).getTime() : -Infinity;
-    const e = b.ends_at ? new Date(b.ends_at).getTime() : Infinity;
-    if (s <= now && now <= e && b.quantity_sold < b.quantity_total) return b;
-  }
-  return sorted.find((b) => b.quantity_sold < b.quantity_total) ?? null;
+  return loteAVenda(batches);
 }
 
 function EventPage() {
@@ -178,9 +176,14 @@ function EventPage() {
             <div className="mt-4 space-y-3">
               {types.map((t) => {
                 const b = batchInfo[t.id]?.batch;
-                const remaining = b ? b.quantity_total - b.quantity_sold : 0;
-                const soldOut = !b || remaining <= 0;
+                const restam = b ? restantesDe(b) : 0;
+                const limite = restam === null ? 10 : Math.min(10, restam);
                 const q = qty[t.id] ?? 0;
+                // Sem lote online: mostra como comprar (lote físico) ou o que vem a seguir.
+                const outros = [...t.ticket_batches]
+                  .sort((x, y) => x.sort_order - y.sort_order)
+                  .map((x) => ({ x, estado: estadoDoLote(x) }))
+                  .filter(({ estado }) => estado === "fisico" || estado === "em_breve" || estado === "portaria");
                 return (
                   <div key={t.id} className="rounded-lg border border-border/60 p-3">
                     <div className="flex items-start justify-between gap-3">
@@ -188,18 +191,53 @@ function EventPage() {
                         <div className="font-semibold">{t.name}</div>
                         {b && <div className="text-xs text-muted-foreground">{b.name}</div>}
                         {t.description && <div className="mt-1 text-xs text-muted-foreground">{t.description}</div>}
-                        <div className="mt-2 font-display text-lg text-primary">{b ? brl(b.price_cents) : "—"}</div>
+                        {b && <div className="mt-2 font-display text-lg text-primary">{brl(b.price_cents)}</div>}
                       </div>
-                      {soldOut ? (
-                        <span className="rounded bg-muted px-2 py-1 text-xs">Esgotado</span>
-                      ) : (
+                      {b ? (
                         <div className="flex items-center gap-2">
                           <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(t.id, -1)} disabled={q === 0}><Minus className="h-3 w-3" /></Button>
                           <span className="w-6 text-center text-sm font-semibold">{q}</span>
-                          <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(t.id, 1)} disabled={q >= Math.min(10, remaining)}><Plus className="h-3 w-3" /></Button>
+                          <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => updateQty(t.id, 1)} disabled={q >= limite}><Plus className="h-3 w-3" /></Button>
                         </div>
-                      )}
+                      ) : outros.length === 0 ? (
+                        <span className="rounded bg-muted px-2 py-1 text-xs">Esgotado</span>
+                      ) : null}
                     </div>
+
+                    {!b &&
+                      outros.map(({ x, estado }) => {
+                        const whats = estado === "fisico" ? whatsappDoLoteFisico(x.name) : null;
+                        return (
+                          <div key={x.id} className="mt-3 border-t border-border/40 pt-3">
+                            <div className="flex items-baseline justify-between gap-3">
+                              <span className="text-sm font-medium">{x.name}</span>
+                              <span className="font-display text-primary">
+                                {estado === "em_breve" ? <span className="text-xs text-muted-foreground">Valor a definir</span> : brl(x.price_cents)}
+                              </span>
+                            </div>
+                            {estado === "fisico" && (
+                              <>
+                                <p className="mt-1.5 flex gap-1.5 text-xs leading-relaxed text-muted-foreground">
+                                  <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                                  {x.aviso || AVISO_FISICO_PADRAO}
+                                </p>
+                                {whats && (
+                                  <Button size="sm" className="mt-2.5 w-full" asChild>
+                                    <a href={whats} target="_blank" rel="noopener noreferrer">
+                                      <MessageCircle className="mr-2 h-4 w-4" />
+                                      Quero comprar pelo WhatsApp
+                                    </a>
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                            {estado === "em_breve" && <p className="mt-1 text-xs text-muted-foreground">Em breve</p>}
+                            {estado === "portaria" && (
+                              <p className="mt-1 text-xs text-muted-foreground">Vendido só na portaria, no dia do evento</p>
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 );
               })}
