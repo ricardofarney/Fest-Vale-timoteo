@@ -526,6 +526,9 @@ export type Database = {
       }
       ticket_batches: {
         Row: {
+          a_definir: boolean
+          aviso: string | null
+          canal: string
           created_at: string
           ends_at: string | null
           id: string
@@ -538,6 +541,9 @@ export type Database = {
           ticket_type_id: string
         }
         Insert: {
+          a_definir?: boolean
+          aviso?: string | null
+          canal?: string
           created_at?: string
           ends_at?: string | null
           id?: string
@@ -550,6 +556,9 @@ export type Database = {
           ticket_type_id: string
         }
         Update: {
+          a_definir?: boolean
+          aviso?: string | null
+          canal?: string
           created_at?: string
           ends_at?: string | null
           id?: string
@@ -614,6 +623,7 @@ export type Database = {
       }
       tickets: {
         Row: {
+          numero: number | null
           attendee_doc: string | null
           attendee_name: string | null
           batch_id: string
@@ -626,6 +636,7 @@ export type Database = {
           status: Database["public"]["Enums"]["ticket_status"]
         }
         Insert: {
+          numero?: number | null
           attendee_doc?: string | null
           attendee_name?: string | null
           batch_id: string
@@ -638,6 +649,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["ticket_status"]
         }
         Update: {
+          numero?: number | null
           attendee_doc?: string | null
           attendee_name?: string | null
           batch_id?: string
