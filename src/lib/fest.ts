@@ -248,9 +248,9 @@ export const FEST = {
 
   /** Usados enquanto o evento ainda não foi cadastrado no painel do organizador. */
   lotesExemplo: [
-    { tipo: "Pista", lote: "1º lote", precoCents: 6000, disponivel: true },
-    { tipo: "Pista", lote: "2º lote", precoCents: 8000, disponivel: false },
-    { tipo: "Área VIP", lote: "1º lote", precoCents: 12000, disponivel: true },
+    { tipo: "Ingresso", lote: "1º lote", precoCents: 2500, disponivel: true },
+    { tipo: "Ingresso", lote: "2º lote", precoCents: 4000, disponivel: false },
+    { tipo: "Ingresso", lote: "3º lote", precoCents: 4500, disponivel: false },
   ],
 
   /**
