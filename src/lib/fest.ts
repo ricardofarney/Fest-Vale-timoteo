@@ -37,7 +37,11 @@ export const FEST = {
   horarioLabel: "das 18h às 1h",
 
   realizador: {
-    nome: "Loja Maçônica Acácia de Acesita",
+    /** As duas realizadoras, juntas, como aparecem no site. */
+    nome: "Loja Maçônica Acácia de Acesita e Fraternidade Feminina Cruzeiro do Sul Acácia de Acesita",
+    /** Para frases do tipo "Realização da …". */
+    nomeComDa: "Loja Maçônica Acácia de Acesita e da Fraternidade Feminina Cruzeiro do Sul Acácia de Acesita",
+    entidades: ["Loja Maçônica Acácia de Acesita", "Fraternidade Feminina Cruzeiro do Sul Acácia de Acesita"],
     cidade: "Timóteo, MG",
   },
 
@@ -391,8 +395,8 @@ export const FEST = {
     titulo: "Uma festa que sustenta o ano inteiro de trabalho social",
     paragrafos: [
       "O Fest Vale nasceu como a festa da cidade e chega em 2027 à sua 4ª edição, reunindo famílias, amigos e música ao vivo em Timóteo.",
-      "A realização é da Loja Maçônica Acácia de Acesita, e a renda do evento sustenta as ações sociais mantidas pela loja na região do Vale do Aço.",
-      "Cada ingresso vendido vira apoio direto a essas ações — por isso a compra é feita aqui, no site oficial, sem intermediário.",
+      "A realização é da Loja Maçônica Acácia de Acesita e da Fraternidade Feminina Cruzeiro do Sul Acácia de Acesita, e a renda do evento sustenta as ações sociais que elas mantêm na região do Vale do Aço.",
+      "Cada ingresso vendido vira apoio direto a essas ações — por isso compre só pelos canais oficiais: os membros da Maçonaria, os pontos de venda parceiros, o site e a portaria.",
     ],
   },
 
