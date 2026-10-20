@@ -10,6 +10,7 @@ import { QrCanvas } from "@/components/qr-canvas";
 import { brl } from "@/lib/format";
 import { MEIOS, lerCaixaSalvo, salvarCaixa, type MeioPagamento } from "@/lib/pdv";
 import { toast } from "sonner";
+import { canalDe, estadoDoLote } from "@/lib/lotes";
 import { ArrowLeft, Loader2, Minus, Plus, Ticket, CheckCircle2, Printer, FlaskConical } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/pdv/$eventId/ingressos")({
@@ -50,7 +51,7 @@ function IngressosPortaria() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ticket_types")
-        .select("id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order)")
+        .select("id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, starts_at, ends_at, canal, a_definir)")
         .eq("event_id", eventId)
         .order("sort_order");
       if (error) throw error;
@@ -58,7 +59,15 @@ function IngressosPortaria() {
       const lista: Lote[] = [];
       for (const t of data ?? []) {
         const tipo = t as unknown as { name: string; ticket_batches: Omit<Lote, "tipo">[] };
-        for (const b of tipo.ticket_batches ?? []) lista.push({ ...b, tipo: tipo.name });
+        for (const b of tipo.ticket_batches ?? []) {
+          // Só lote de portaria (ou site e portaria), já definido e dentro da data.
+          // Lote físico e "a definir" não aparecem aqui — o banco também recusa.
+          const est = estadoDoLote(b as never);
+          const canal = canalDe(b as never);
+          if (canal !== "todos" && canal !== "portaria") continue;
+          if (est === "em_breve" || est === "encerrado") continue;
+          lista.push({ ...b, tipo: tipo.name });
+        }
       }
       return lista.sort((a, b) =>
         a.tipo.localeCompare(b.tipo) || a.sort_order - b.sort_order);
