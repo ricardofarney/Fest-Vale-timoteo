@@ -568,6 +568,7 @@ export type Database = {
       }
       ticket_batches: {
         Row: {
+          arquivado: boolean
           oculto: boolean
           pontos_venda: string[]
           a_definir: boolean
@@ -585,6 +586,7 @@ export type Database = {
           ticket_type_id: string
         }
         Insert: {
+          arquivado?: boolean
           oculto?: boolean
           pontos_venda?: string[]
           a_definir?: boolean
@@ -602,6 +604,7 @@ export type Database = {
           ticket_type_id: string
         }
         Update: {
+          arquivado?: boolean
           oculto?: boolean
           pontos_venda?: string[]
           a_definir?: boolean
