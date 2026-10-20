@@ -225,7 +225,7 @@ function TicketTypesPanel({ eventId, modoTeste, types, onChange }: { eventId: st
   return (
     <Card className="p-6">
       <h2 className="font-display text-xl font-semibold">Tipos de ingresso e lotes</h2>
-      <p className="mt-1 text-sm text-muted-foreground">Crie tipos (Pista, VIP, Meia...) e defina lotes com data e quantidade. A virada é automática.</p>
+      <p className="mt-1 text-sm text-muted-foreground">Todos os ingressos são iguais: cada lote define valor, quantidade, numeração e onde é vendido. Só crie outro tipo se um dia houver diferença de verdade (ex.: meia-entrada).</p>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Input className="max-w-xs" placeholder="Nome do tipo (ex.: Pista)" value={name} onChange={(e) => setName(e.target.value)} />
@@ -244,7 +244,7 @@ function TicketTypesPanel({ eventId, modoTeste, types, onChange }: { eventId: st
               </div>
               <Button size="icon" variant="ghost" onClick={() => removeType(t)}><Trash2 className="h-4 w-4" /></Button>
             </div>
-            <BatchesEditor typeId={t.id} modoTeste={modoTeste} batches={t.ticket_batches ?? []} onChange={onChange} />
+            <BatchesEditor typeId={t.id} modoTeste={modoTeste} batches={(t.ticket_batches ?? []).filter((b: any) => !b.arquivado)} onChange={onChange} />
           </div>
         ))}
       </div>
@@ -429,7 +429,7 @@ function BatchesEditor({ typeId, modoTeste, batches, onChange }: { typeId: strin
         ) : (
           <div key={b.id} className="flex flex-wrap items-center gap-3 rounded-md bg-secondary/40 px-3 py-2 text-sm">
             <span className="font-medium">{b.name}</span>
-            <span className="text-primary">{b.a_definir ? "valor a definir" : brl(b.price_cents)}</span>
+            <span className="text-primary">{b.price_cents > 0 ? brl(b.price_cents) : canalDe(b) === "fisico" ? "sem valor" : "valor a definir"}</span>
             <span className="text-muted-foreground">
               {canalDe(b) === "fisico"
                 ? `${b.quantity_total} impressos`
