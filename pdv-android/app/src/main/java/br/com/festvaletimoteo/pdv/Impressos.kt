@@ -177,13 +177,16 @@ object Impressos {
      * ingresso do site e é lido pela tela de validação da entrada.
      */
     fun ingresso(evento: String, tipo: String, lote: String, preco: Int, meio: String, quando: String,
-                 token: String, numero: Int, de: Int, offline: Boolean): Bitmap {
+                 token: String, numero: Int, de: Int, offline: Boolean, nIngresso: Int? = null): Bitmap {
         val p = Papel()
         p.cabecalho(logo, "INGRESSO", evento)
         p.tracejado()
         p.espaco(4f)
         p.centro("ENTRADA", 34f, true)
         p.centro("$tipo · $lote", 20f, true)
+        // Número do ingresso (faixa do lote, definida no sistema). Sem internet
+        // ele só existe depois que a venda sobe, então o ticket sai sem ele.
+        if (nIngresso != null && nIngresso > 0) p.centro("Nº ${"%04d".format(nIngresso)}", 30f, true)
         p.espaco(4f)
         p.linha(meio, brl(preco), 20f)
         p.linha(quando, "$numero de $de", 18f)

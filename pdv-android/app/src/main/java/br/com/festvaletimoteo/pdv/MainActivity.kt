@@ -1246,7 +1246,7 @@ class MainActivity : AppCompatActivity() {
                 principal.post {
                     tirar(veu)
                     r.optJSONObject("caixa")?.let { caixa = it }
-                    concluirIngresso(lote, tokens, total, rotulo, troco, false)
+                    concluirIngresso(lote, tokens, total, rotulo, troco, false, r.optJSONArray("numeros"))
                 }
                 atualizarEstadoSilencioso()
             } catch (e: ErroApi) {
@@ -1282,15 +1282,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun concluirIngresso(lote: JSONObject, tokens: JSONArray, total: Int, rotulo: String,
-                                 troco: Int, offline: Boolean) {
+                                 troco: Int, offline: Boolean, numeros: JSONArray? = null) {
         val quando = dataHoraBrasilia()
         val n = tokens.length()
         val imprimirTodos = {
             for (i in 0 until n) {
                 val tk = tokens.getString(i)
+                val nIngresso = numeros?.let { if (i < it.length() && !it.isNull(i)) it.optInt(i) else null }
                 imprimirEmFundo({
                     Impressos.ingresso(local.nomeEvento, lote.optString("tipo"), lote.optString("lote"),
-                        lote.optInt("preco"), rotulo, quando, tk, i + 1, n, offline)
+                        lote.optInt("preco"), rotulo, quando, tk, i + 1, n, offline, nIngresso)
                 })
             }
         }
