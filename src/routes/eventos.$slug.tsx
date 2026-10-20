@@ -8,7 +8,16 @@ import { brl, fmtDateTime } from "@/lib/format";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
-import { estadoDoLote, loteAVenda, restantesDe, whatsappDoLoteFisico, AVISO_FISICO_PADRAO } from "@/lib/lotes";
+import {
+  estadoDoLote,
+  loteAVenda,
+  restantesDe,
+  whatsappDoLoteFisico,
+  AVISO_FISICO_PADRAO,
+  visivelNoSite,
+  usaWhatsapp,
+  canalDe,
+} from "@/lib/lotes";
 
 export const Route = createFileRoute("/eventos/$slug")({
   component: EventPage,
@@ -27,6 +36,8 @@ type Batch = {
   canal: string;
   a_definir: boolean;
   aviso: string | null;
+  oculto: boolean;
+  pontos_venda: string[] | null;
 };
 type TicketType = {
   id: string;
@@ -49,7 +60,7 @@ async function fetchEventBySlug(slug: string) {
   const { data: types } = await supabase
     .from("ticket_types")
     .select(
-      "id, name, description, is_half_price, is_solidary, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, starts_at, ends_at, sort_order, ticket_type_id, canal, a_definir, aviso)",
+      "id, name, description, is_half_price, is_solidary, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, starts_at, ends_at, sort_order, ticket_type_id, canal, a_definir, aviso, oculto, pontos_venda)",
     )
     .eq("event_id", ev.id)
     .order("sort_order");
@@ -58,7 +69,7 @@ async function fetchEventBySlug(slug: string) {
 
 /** Só o lote que o site vende agora (canal site/todos, já definido, dentro da data e com saldo). */
 function activeBatch(batches: Batch[]): Batch | null {
-  return loteAVenda(batches);
+  return loteAVenda(batches.filter(visivelNoSite));
 }
 
 function EventPage() {
@@ -180,7 +191,8 @@ function EventPage() {
                 const limite = restam === null ? 10 : Math.min(10, restam);
                 const q = qty[t.id] ?? 0;
                 // Sem lote online: mostra como comprar (lote físico) ou o que vem a seguir.
-                const outros = [...t.ticket_batches]
+                const outros = t.ticket_batches
+                  .filter(visivelNoSite)
                   .sort((x, y) => x.sort_order - y.sort_order)
                   .map((x) => ({ x, estado: estadoDoLote(x) }))
                   .filter(({ estado }) => estado === "fisico" || estado === "em_breve" || estado === "portaria");
@@ -206,21 +218,28 @@ function EventPage() {
 
                     {!b &&
                       outros.map(({ x, estado }) => {
-                        const whats = estado === "fisico" ? whatsappDoLoteFisico(x.name) : null;
+                        const whats = estado === "fisico" && usaWhatsapp(x) ? whatsappDoLoteFisico(x.name) : null;
+                        const fisico = canalDe(x) === "fisico";
                         return (
                           <div key={x.id} className="mt-3 border-t border-border/40 pt-3">
                             <div className="flex items-baseline justify-between gap-3">
                               <span className="text-sm font-medium">{x.name}</span>
                               <span className="font-display text-primary">
-                                {estado === "em_breve" ? <span className="text-xs text-muted-foreground">Valor a definir</span> : brl(x.price_cents)}
+                                {x.price_cents > 0 ? brl(x.price_cents) : <span className="text-xs text-muted-foreground">Valor a definir</span>}
                               </span>
                             </div>
-                            {estado === "fisico" && (
+                            {fisico && (estado === "fisico" || estado === "em_breve") && (
                               <>
                                 <p className="mt-1.5 flex gap-1.5 text-xs leading-relaxed text-muted-foreground">
                                   <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                                   {x.aviso || AVISO_FISICO_PADRAO}
                                 </p>
+                                {(x.pontos_venda ?? []).map((p) => (
+                                  <p key={p} className="mt-1 flex gap-1.5 text-xs">
+                                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                                    {p}
+                                  </p>
+                                ))}
                                 {whats && (
                                   <Button size="sm" className="mt-2.5 w-full" asChild>
                                     <a href={whats} target="_blank" rel="noopener noreferrer">
@@ -231,7 +250,7 @@ function EventPage() {
                                 )}
                               </>
                             )}
-                            {estado === "em_breve" && <p className="mt-1 text-xs text-muted-foreground">Em breve</p>}
+                            {estado === "em_breve" && <p className="mt-1 text-xs font-medium text-muted-foreground">Em breve</p>}
                             {estado === "portaria" && (
                               <p className="mt-1 text-xs text-muted-foreground">Vendido só na portaria, no dia do evento</p>
                             )}

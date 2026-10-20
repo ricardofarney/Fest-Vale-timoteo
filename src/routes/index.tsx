@@ -6,7 +6,16 @@ import { Button } from "@/components/ui/button";
 import { FEST, mapsUrl, NIVEIS_PATROCINIO, NIVEL_INFO } from "@/lib/fest";
 import { BotaoWhatsapp, LinkWhatsapp } from "@/components/botao-whatsapp";
 import { brl } from "@/lib/format";
-import { estadoDoLote, restantesDe, whatsappDoLoteFisico, AVISO_FISICO_PADRAO, type EstadoLote } from "@/lib/lotes";
+import {
+  estadoDoLote,
+  restantesDe,
+  whatsappDoLoteFisico,
+  AVISO_FISICO_PADRAO,
+  visivelNoSite,
+  usaWhatsapp,
+  canalDe,
+  type EstadoLote,
+} from "@/lib/lotes";
 import {
   ArrowRight,
   CalendarDays,
@@ -53,7 +62,7 @@ async function fetchFestEvent() {
   const { data: types } = await supabase
     .from("ticket_types")
     .select(
-      "id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, starts_at, ends_at, canal, a_definir, aviso)",
+      "id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, starts_at, ends_at, canal, a_definir, aviso, oculto, pontos_venda)",
     )
     .eq("event_id", ev.id)
     .order("sort_order");
@@ -428,10 +437,15 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
     estado: EstadoLote;
     restantes: number | null;
     aviso: string | null;
+    fisico: boolean;
+    online: boolean;
+    whatsapp: boolean;
+    pontos: string[];
   };
   const lotes: Card[] = temEvento
     ? (data!.types as any[]).flatMap((t) =>
         [...(t.ticket_batches ?? [])]
+          .filter(visivelNoSite)
           .sort((a: any, b: any) => a.sort_order - b.sort_order)
           .map((b: any) => ({
             tipo: t.name as string,
@@ -440,6 +454,10 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
             estado: estadoDoLote(b),
             restantes: restantesDe(b),
             aviso: (b.aviso as string | null) ?? null,
+            fisico: canalDe(b) === "fisico",
+            online: canalDe(b) === "site" || canalDe(b) === "todos",
+            whatsapp: usaWhatsapp(b),
+            pontos: (b.pontos_venda as string[] | null) ?? [],
           }))
           // Lote encerrado por data sai da vitrine; esgotado continua aparecendo.
           .filter((l: Card) => l.estado !== "encerrado"),
@@ -451,8 +469,13 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
         estado: (l.disponivel ? "a_venda" : "esgotado") as EstadoLote,
         restantes: null,
         aviso: null,
+        fisico: false,
+        online: true,
+        whatsapp: false,
+        pontos: [],
       }));
   const algumOnline = lotes.some((l) => l.estado === "a_venda");
+  const proximoOnline = lotes.find((l) => l.online && l.estado === "em_breve");
 
   return (
     <section id="ingressos" className="scroll-mt-20 border-y border-border/60 bg-card/30">
@@ -463,10 +486,11 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
           subtitle="Cada lote tem o seu jeito de comprar. Veja abaixo como garantir o seu ingresso."
         />
 
-        <div className="mx-auto mt-10 grid max-w-4xl gap-4 md:grid-cols-3">
+        <div className="mx-auto mt-10 grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {lotes.map((l, i) => {
             const apagado = l.estado === "esgotado" || l.estado === "encerrado";
-            const whats = l.estado === "fisico" ? whatsappDoLoteFisico(l.lote) : null;
+            const whats = l.estado === "fisico" && l.whatsapp ? whatsappDoLoteFisico(l.lote) : null;
+            const mostraAviso = l.fisico && (l.estado === "fisico" || l.estado === "em_breve");
             return (
               <div
                 key={`${l.tipo}-${l.lote}-${i}`}
@@ -481,10 +505,10 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
                 <div className="text-sm font-medium text-muted-foreground">{l.tipo}</div>
                 <div className="mt-1 font-display text-lg font-semibold">{l.lote}</div>
                 <div className="mt-5 font-display text-3xl font-bold tabular-nums">
-                  {l.estado === "em_breve" ? (
-                    <span className="text-2xl text-muted-foreground">Valor a definir</span>
-                  ) : (
+                  {l.precoCents > 0 ? (
                     brl(l.precoCents)
+                  ) : (
+                    <span className="text-2xl text-muted-foreground">Valor a definir</span>
                   )}
                 </div>
 
@@ -503,23 +527,38 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
                 {l.estado === "encerrado" && <div className="mt-2 text-xs text-muted-foreground">Encerrado</div>}
 
                 {l.estado === "fisico" && (
-                  <>
-                    <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
-                      <Lock className="h-3.5 w-3.5" />
-                      Venda física
+                  <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-primary">
+                    <Lock className="h-3.5 w-3.5" />
+                    {l.pontos.length ? "Venda nos pontos físicos" : "Venda física"}
+                  </div>
+                )}
+                {mostraAviso && (
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                    {l.aviso || AVISO_FISICO_PADRAO}
+                  </p>
+                )}
+                {mostraAviso && l.pontos.length > 0 && (
+                  <div className="mt-3">
+                    <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+                      Pontos de venda
                     </div>
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                      {l.aviso || AVISO_FISICO_PADRAO}
-                    </p>
-                    {whats && (
-                      <Button size="sm" className="mt-4 w-full" asChild>
-                        <a href={whats} target="_blank" rel="noopener noreferrer">
-                          <MessageCircle className="mr-2 h-4 w-4" />
-                          Quero comprar pelo WhatsApp
-                        </a>
-                      </Button>
-                    )}
-                  </>
+                    <ul className="mt-1.5 space-y-1">
+                      {l.pontos.map((p) => (
+                        <li key={p} className="flex gap-1.5 text-sm">
+                          <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {whats && (
+                  <Button size="sm" className="mt-4 w-full" asChild>
+                    <a href={whats} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Quero comprar pelo WhatsApp
+                    </a>
+                  </Button>
                 )}
               </div>
             );
@@ -536,7 +575,10 @@ function Ingressos({ data }: { data: Awaited<ReturnType<typeof fetchFestEvent>> 
             </Button>
           ) : temEvento ? (
             <p className="text-center text-sm text-muted-foreground">
-              A venda pelo site abre no próximo lote. Fique de olho aqui e no nosso Instagram.
+              {proximoOnline
+                ? `A venda pelo site começa no ${proximoOnline.lote}, com ingresso por e-mail.`
+                : "A venda pelo site abre em breve."}{" "}
+              Fique de olho aqui e no nosso Instagram.
             </p>
           ) : (
             <>
