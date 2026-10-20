@@ -236,15 +236,24 @@ function Hero() {
           </p>
         </div>
 
-        {FEST.imagens.heroBanda && (
-          <div className="relative mx-auto mt-12 max-w-3xl md:mt-16">
-            <img
-              src={FEST.imagens.heroBanda}
-              alt={FEST.imagens.heroBandaLegenda}
-              className="mx-auto w-full drop-shadow-[0_25px_45px_rgba(0,0,0,0.55)]"
-              width={1400}
-              height={933}
-            />
+        {FEST.imagens.heroBandas.length > 0 && (
+          <div className="mx-auto mt-12 grid max-w-6xl grid-cols-2 gap-3 sm:gap-6 md:mt-16">
+            {FEST.imagens.heroBandas.map((b) => (
+              <figure key={b.imagem} className="min-w-0">
+                <img
+                  src={b.imagem}
+                  alt={`Banda ${b.legenda}`}
+                  className="mx-auto w-full drop-shadow-[0_25px_45px_rgba(0,0,0,0.55)]"
+                  width={1400}
+                  height={933}
+                />
+                {b.papel && (
+                  <figcaption className="mt-2 text-center text-[11px] font-medium uppercase tracking-[0.2em] text-primary sm:text-xs">
+                    {b.papel}
+                  </figcaption>
+                )}
+              </figure>
+            ))}
           </div>
         )}
       </div>
