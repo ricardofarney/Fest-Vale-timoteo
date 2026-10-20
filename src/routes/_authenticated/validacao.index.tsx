@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ScanLine, Calendar } from "lucide-react";
+import { ScanLine, Calendar, SearchCheck } from "lucide-react";
 import { fmtDateTime } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/validacao/")({
@@ -66,11 +66,18 @@ function ValidationHome() {
                 {ev.venue && <span>• {ev.venue}</span>}
               </div>
             </div>
-            <Button asChild>
-              <Link to="/validacao/$eventId/scanner" params={{ eventId: ev.id }}>
-                <ScanLine className="mr-1 h-4 w-4" />Abrir scanner
-              </Link>
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button variant="outline" asChild>
+                <Link to="/validacao/$eventId/conferir" params={{ eventId: ev.id }}>
+                  <SearchCheck className="mr-1 h-4 w-4" />Conferir impressos
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link to="/validacao/$eventId/scanner" params={{ eventId: ev.id }}>
+                  <ScanLine className="mr-1 h-4 w-4" />Abrir scanner
+                </Link>
+              </Button>
+            </div>
           </Card>
         ))}
       </div>

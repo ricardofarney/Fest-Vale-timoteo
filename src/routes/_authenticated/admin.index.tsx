@@ -38,6 +38,7 @@ type Visao = {
   impressos_conferencia: Array<{
     lote: string; primeiro: number; ultimo: number; arquivo: string | null;
     esperado: number; no_banco: number; cancelados: number; usados: number; integro: boolean;
+    testados?: number;
   }>;
   bar: { vendas: number; receita_cents: number; cortesias: number; canceladas: number };
   sangria_cents: number;
@@ -165,6 +166,11 @@ function VisaoGeral() {
               Cada bloco é comparado com a impressão digital dos arquivos de QR entregues para a gráfica.
               O sistema não deixa apagar nem alterar esses ingressos.
             </p>
+            <Button size="sm" variant="outline" className="mt-3" asChild>
+              <Link to="/validacao/$eventId/conferir" params={{ eventId: evento.id }}>
+                Testar QR impressos (sem registrar entrada)
+              </Link>
+            </Button>
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               {lista.map((c) => (
                 <div key={c.lote} className="rounded-lg bg-secondary/40 px-3 py-2 text-sm">
@@ -177,6 +183,7 @@ function VisaoGeral() {
                   <div className="mt-0.5 text-xs tabular-nums text-muted-foreground">
                     Nº {String(c.primeiro).padStart(4, "0")}–{String(c.ultimo).padStart(4, "0")} · {c.no_banco} de {c.esperado}
                     {c.usados > 0 && ` · ${c.usados} entraram`}
+                    {(c.testados ?? 0) > 0 && ` · ${c.testados} QR testados`}
                     {c.cancelados > 0 && ` · ${c.cancelados} cancelados`}
                   </div>
                 </div>
