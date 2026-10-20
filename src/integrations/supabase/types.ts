@@ -386,6 +386,48 @@ export type Database = {
         }
         Relationships: []
       }
+      lote_faixas: {
+        Row: {
+          batch_id: string
+          created_at: string
+          event_id: string
+          fim: number
+          id: string
+          inicio: number
+        }
+        Insert: {
+          batch_id: string
+          created_at?: string
+          event_id: string
+          fim: number
+          id?: string
+          inicio: number
+        }
+        Update: {
+          batch_id?: string
+          created_at?: string
+          event_id?: string
+          fim?: number
+          id?: string
+          inicio?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lote_faixas_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "ticket_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lote_faixas_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           batch_id: string
@@ -526,6 +568,8 @@ export type Database = {
       }
       ticket_batches: {
         Row: {
+          oculto: boolean
+          pontos_venda: string[]
           a_definir: boolean
           aviso: string | null
           canal: string
@@ -541,6 +585,8 @@ export type Database = {
           ticket_type_id: string
         }
         Insert: {
+          oculto?: boolean
+          pontos_venda?: string[]
           a_definir?: boolean
           aviso?: string | null
           canal?: string
@@ -556,6 +602,8 @@ export type Database = {
           ticket_type_id: string
         }
         Update: {
+          oculto?: boolean
+          pontos_venda?: string[]
           a_definir?: boolean
           aviso?: string | null
           canal?: string
