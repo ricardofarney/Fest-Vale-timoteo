@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import { brl } from "@/lib/format";
-import { CANAL_LABEL, AVISO_FISICO_PADRAO, canalDe, type Canal } from "@/lib/lotes";
+import { CANAL_LABEL, AVISO_FISICO_PADRAO, canalDe, numeroIngresso, type Canal } from "@/lib/lotes";
 import { Plus, Trash2, ExternalLink, Ban, RotateCcw, Pencil, Check, X, FlaskConical } from "lucide-react";
 
 /** O Postgres recusa apagar algo que ainda está preso a um pedido. A mensagem
@@ -52,7 +52,7 @@ function EditEvent() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ticket_types")
-        .select("*, ticket_batches(*)")
+        .select("*, ticket_batches(*, lote_faixas(inicio, fim))")
         .eq("event_id", id)
         .order("sort_order");
       if (error) throw error;
@@ -253,7 +253,13 @@ function TicketTypesPanel({ eventId, modoTeste, types, onChange }: { eventId: st
 }
 
 function BatchesEditor({ typeId, modoTeste, batches, onChange }: { typeId: string; modoTeste: boolean; batches: any[]; onChange: () => void }) {
-  const vazio = { name: "", price: "", qty: "", ends_at: "", canal: "todos" as Canal, a_definir: false, aviso: "" };
+  const vazio = {
+    name: "", price: "", qty: "", starts_at: "", ends_at: "",
+    canal: "todos" as Canal, a_definir: false, aviso: "", oculto: false, pontos: "",
+  };
+  /** datetime-local não aceita fuso; corta para o formato que ele espera */
+  const paraCampo = (iso?: string | null) => (iso ? new Date(iso).toISOString().slice(0, 16) : "");
+  const listaPontos = (txt: string) => txt.split("\n").map((l) => l.trim()).filter(Boolean);
   const [form, setForm] = useState({ ...vazio, name: "1º lote" });
   const [editando, setEditando] = useState<string | null>(null);
   const [edicao, setEdicao] = useState(vazio);
@@ -261,14 +267,17 @@ function BatchesEditor({ typeId, modoTeste, batches, onChange }: { typeId: strin
   const addBatch = async () => {
     if (!form.name) return toast.error("Dê um nome ao lote");
     if (!form.a_definir && (!form.price || !form.qty)) {
-      return toast.error("Preencha preço e quantidade, ou marque \"valor a definir\"");
+      return toast.error("Preencha preço e quantidade, ou marque \"venda ainda não liberada\"");
     }
     const { error } = await supabase.from("ticket_batches").insert({
       ticket_type_id: typeId,
       name: form.name,
       price_cents: form.price ? Math.round(parseFloat(form.price) * 100) : 0,
       quantity_total: form.qty ? parseInt(form.qty) : 0,
+      starts_at: form.starts_at ? new Date(form.starts_at).toISOString() : null,
       ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
+      oculto: form.oculto,
+      pontos_venda: listaPontos(form.pontos),
       sort_order: (Math.max(0, ...batches.map((b) => b.sort_order ?? 0)) || 0) + 10,
       canal: form.canal,
       a_definir: form.a_definir,
@@ -286,11 +295,13 @@ function BatchesEditor({ typeId, modoTeste, batches, onChange }: { typeId: strin
       name: b.name,
       price: (b.price_cents / 100).toFixed(2),
       qty: String(b.quantity_total),
-      // datetime-local não aceita fuso; corta para o formato que ele espera
-      ends_at: b.ends_at ? new Date(b.ends_at).toISOString().slice(0, 16) : "",
+      starts_at: paraCampo(b.starts_at),
+      ends_at: paraCampo(b.ends_at),
       canal: canalDe(b),
       a_definir: !!b.a_definir,
       aviso: b.aviso ?? "",
+      oculto: !!b.oculto,
+      pontos: (b.pontos_venda ?? []).join("\n"),
     });
   };
 
@@ -301,7 +312,7 @@ function BatchesEditor({ typeId, modoTeste, batches, onChange }: { typeId: strin
     if (!Number.isFinite(preco) || preco < 0) return toast.error("Preço inválido.");
     if (!Number.isFinite(qtd)) return toast.error("Quantidade inválida.");
     if (!edicao.a_definir && preco === 0 && edicao.canal !== "fisico") {
-      return toast.error("Defina o valor do lote, ou deixe marcado \"valor a definir\".");
+      return toast.error("Defina o valor do lote, ou deixe marcado \"venda ainda não liberada\".");
     }
     // Reduzir abaixo do que já saiu deixaria o lote com estoque negativo.
     if (qtd < (b.quantity_sold ?? 0)) {
@@ -316,7 +327,10 @@ function BatchesEditor({ typeId, modoTeste, batches, onChange }: { typeId: strin
         name: edicao.name.trim(),
         price_cents: preco,
         quantity_total: qtd,
+        starts_at: edicao.starts_at ? new Date(edicao.starts_at).toISOString() : null,
         ends_at: edicao.ends_at ? new Date(edicao.ends_at).toISOString() : null,
+        oculto: edicao.oculto,
+        pontos_venda: listaPontos(edicao.pontos),
         canal: edicao.canal,
         a_definir: edicao.a_definir,
         aviso: edicao.aviso.trim() || (edicao.canal === "fisico" ? AVISO_FISICO_PADRAO : null),
@@ -398,6 +412,8 @@ function BatchesEditor({ typeId, modoTeste, batches, onChange }: { typeId: strin
               <Input className="w-28" type="number" step="0.01" value={edicao.price} onChange={(e) => setEdicao({ ...edicao, price: e.target.value })} /></div>
             <div><Label className="text-xs">Qtd.</Label>
               <Input className="w-24" type="number" value={edicao.qty} onChange={(e) => setEdicao({ ...edicao, qty: e.target.value })} /></div>
+            <div><Label className="text-xs">Começa em</Label>
+              <Input className="w-52" type="datetime-local" value={edicao.starts_at} onChange={(e) => setEdicao({ ...edicao, starts_at: e.target.value })} /></div>
             <div><Label className="text-xs">Encerra em</Label>
               <Input className="w-52" type="datetime-local" value={edicao.ends_at} onChange={(e) => setEdicao({ ...edicao, ends_at: e.target.value })} /></div>
             <CamposCanal v={edicao} set={(x) => setEdicao({ ...edicao, ...x })} />
@@ -420,6 +436,23 @@ function BatchesEditor({ typeId, modoTeste, batches, onChange }: { typeId: strin
                 : `${b.quantity_sold}/${b.quantity_total || "∞"} vendidos`}
             </span>
             <span className="rounded bg-background/60 px-2 py-0.5 text-xs text-muted-foreground">{CANAL_LABEL[canalDe(b)]}</span>
+            {(b.lote_faixas ?? []).length > 0 && (
+              <span className="text-xs tabular-nums text-muted-foreground" title="Numeração dos ingressos deste lote">
+                Nº {[...b.lote_faixas]
+                  .sort((x: any, y: any) => x.inicio - y.inicio)
+                  .map((f: any) => `${numeroIngresso(f.inicio)}–${numeroIngresso(f.fim)}`)
+                  .join(", ")}
+              </span>
+            )}
+            {b.oculto && (
+              <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">fora do site</span>
+            )}
+            {b.starts_at && new Date(b.starts_at) > new Date() && (
+              <span className="text-xs text-muted-foreground">a partir de {new Date(b.starts_at).toLocaleString("pt-BR")}</span>
+            )}
+            {(b.pontos_venda ?? []).length > 0 && (
+              <span className="w-full text-xs text-muted-foreground">Pontos de venda: {b.pontos_venda.join(" · ")}</span>
+            )}
             {b.a_definir && (
               <span className="rounded bg-accent/20 px-2 py-0.5 text-xs font-medium">em breve — não está vendendo</span>
             )}
@@ -457,6 +490,7 @@ function BatchesEditor({ typeId, modoTeste, batches, onChange }: { typeId: strin
         <div><Label className="text-xs">Lote</Label><Input className="w-32" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
         <div><Label className="text-xs">Preço (R$)</Label><Input className="w-28" type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
         <div><Label className="text-xs">Qtd.</Label><Input className="w-24" type="number" value={form.qty} onChange={(e) => setForm({ ...form, qty: e.target.value })} /></div>
+        <div><Label className="text-xs">Começa em</Label><Input className="w-52" type="datetime-local" value={form.starts_at} onChange={(e) => setForm({ ...form, starts_at: e.target.value })} /></div>
         <div><Label className="text-xs">Encerra em</Label><Input className="w-52" type="datetime-local" value={form.ends_at} onChange={(e) => setForm({ ...form, ends_at: e.target.value })} /></div>
         <CamposCanal v={form} set={(x) => setForm({ ...form, ...x })} />
         <Button size="sm" onClick={addBatch}><Plus className="mr-1 h-3 w-3" />Lote</Button>
@@ -515,8 +549,8 @@ function CamposCanal({
   v,
   set,
 }: {
-  v: { canal: Canal; a_definir: boolean; aviso: string };
-  set: (x: Partial<{ canal: Canal; a_definir: boolean; aviso: string }>) => void;
+  v: { canal: Canal; a_definir: boolean; aviso: string; oculto: boolean; pontos: string };
+  set: (x: Partial<{ canal: Canal; a_definir: boolean; aviso: string; oculto: boolean; pontos: string }>) => void;
 }) {
   return (
     <>
@@ -537,12 +571,21 @@ function CamposCanal({
       </div>
       <label className="flex h-10 items-center gap-2 text-xs">
         <input type="checkbox" checked={v.a_definir} onChange={(e) => set({ a_definir: e.target.checked })} />
-        Valor/data a definir (aparece &quot;Em breve&quot;)
+        Venda ainda não liberada (aparece &quot;Em breve&quot;)
+      </label>
+      <label className="flex h-10 items-center gap-2 text-xs">
+        <input type="checkbox" checked={v.oculto} onChange={(e) => set({ oculto: e.target.checked })} />
+        Não mostrar no site (ex.: cortesia)
       </label>
       {v.canal === "fisico" && (
         <div className="w-full">
-          <Label className="text-xs">Aviso no site (o botão do WhatsApp aparece junto)</Label>
+          <Label className="text-xs">Aviso no site</Label>
           <Input value={v.aviso} onChange={(e) => set({ aviso: e.target.value })} placeholder={AVISO_FISICO_PADRAO} />
+          <Label className="mt-2 block text-xs">
+            Pontos de venda, um por linha (sem pontos, o site mostra o botão do WhatsApp)
+          </Label>
+          <Textarea rows={2} value={v.pontos} onChange={(e) => set({ pontos: e.target.value })}
+                    placeholder="Gráfica Ponta de Lápis — Quitandinha, Timóteo" />
         </div>
       )}
     </>

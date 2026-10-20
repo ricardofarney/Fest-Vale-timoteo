@@ -18,6 +18,7 @@ type ScanResult = {
   attendee_name?: string;
   type?: string;
   batch?: string;
+  numero?: number | null;
   checked_in_at?: string;
   lido_em?: string;
 };
@@ -269,6 +270,7 @@ function ResultBanner({ result }: { result: ScanResult }) {
       {(result.type || result.batch) && (
         <div className="text-sm opacity-90">
           {result.type}{result.batch ? ` · ${result.batch}` : ""}
+          {result.numero ? ` · Nº ${String(result.numero).padStart(4, "0")}` : ""}
         </div>
       )}
 
