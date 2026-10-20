@@ -97,9 +97,14 @@ export const FEST = {
     logo: "/img/logo.png",
     /** Imagem de fundo do topo (cobre a seção inteira, em opacidade reduzida). */
     hero: "",
-    /** Recorte da atração principal, exibido no rodapé do topo. Fundo transparente. */
-    heroBanda: "/img/gertrudes-banda.webp",
-    heroBandaLegenda: "Atração principal — banda Gertrudes",
+    /**
+     * Bandas em destaque no rodapé do topo, lado a lado e na ordem da noite.
+     * Recortes com fundo transparente, todos em 3:2 (1400x933) com a logo na foto.
+     */
+    heroBandas: [
+      { imagem: "/img/polivalencia-banda.webp", legenda: "Polivalência", papel: "Abre a noite" },
+      { imagem: "/img/gertrudes-banda.webp", legenda: "Gertrudes", papel: "Fecha a noite" },
+    ] as ReadonlyArray<{ imagem: string; legenda: string; papel?: string }>,
     /**
      * Arte da prévia de link (WhatsApp, Facebook, Instagram, X).
      * Formato ideal: 1200x630 px, JPG ou PNG, abaixo de 300 KB.
