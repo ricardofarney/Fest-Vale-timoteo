@@ -99,7 +99,7 @@ function EventDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ticket_types")
-        .select("id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, canal, oculto)")
+        .select("id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, canal, oculto, ends_at)")
         .eq("event_id", id)
         .order("sort_order");
       if (error) throw error;
@@ -331,6 +331,8 @@ function EventDashboard() {
                 <div className="space-y-2">
                   {[...(t.ticket_batches ?? [])]
                     .filter((b: any) => b.canal !== "fisico")
+                    // lote encerrado que nunca vendeu (ex.: lote de teste) não entra no gráfico
+                    .filter((b: any) => !(b.ends_at && new Date(b.ends_at) <= new Date() && !b.quantity_sold))
                     .sort((a: any, b: any) => a.sort_order - b.sort_order)
                     .map((b: any) => {
                       const pct = b.quantity_total ? Math.round((b.quantity_sold / b.quantity_total) * 100) : 0;
