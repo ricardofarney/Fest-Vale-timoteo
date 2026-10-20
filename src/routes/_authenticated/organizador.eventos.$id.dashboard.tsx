@@ -61,6 +61,8 @@ function EventDashboard() {
         .select("id, total_cents, paid_at, payment_method")
         .eq("event_id", id)
         .eq("status", "paid")
+        // Só venda de verdade: emissão de ingresso impresso não é pedido nem receita
+        .in("origem", ["site", "portaria"])
         .order("paid_at");
       if (error) throw error;
       return (data ?? []) as OrderRow[];
@@ -72,10 +74,23 @@ function EventDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tickets")
-        .select("id, status, checked_in_at, attendee_name, attendee_doc, batch_id, created_at, orders!inner(event_id)")
-        .eq("orders.event_id", id);
+        .select("id, status, checked_in_at, attendee_name, attendee_doc, batch_id, created_at, orders!inner(event_id, origem)")
+        .eq("orders.event_id", id)
+        .in("orders.origem", ["site", "portaria"]);
       if (error) throw error;
       return (data ?? []) as unknown as TicketRow[];
+    },
+  });
+
+  // Totais do evento inteiro, incluindo os ingressos impressos (contados no banco).
+  const resumoQ = useQuery({
+    queryKey: ["dash-resumo", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_visao_geral", { _event_id: id });
+      if (error) throw error;
+      return data as unknown as {
+        ingressos: { vendidos: number; impressos: number; cortesias: number; emitidos: number; usados: number };
+      };
     },
   });
 
@@ -84,7 +99,7 @@ function EventDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ticket_types")
-        .select("id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order)")
+        .select("id, name, sort_order, ticket_batches(id, name, price_cents, quantity_total, quantity_sold, sort_order, canal, oculto)")
         .eq("event_id", id)
         .order("sort_order");
       if (error) throw error;
@@ -108,8 +123,11 @@ function EventDashboard() {
 
   const revenueCents = orders.reduce((sum, o) => sum + o.total_cents, 0);
   const ticketsSold = tickets.filter((t) => t.status !== "cancelled").length;
-  const checkedIn = tickets.filter((t) => t.status === "checked_in").length;
-  const attendanceRate = ticketsSold ? Math.round((checkedIn / ticketsSold) * 100) : 0;
+  const resumo = resumoQ.data?.ingressos;
+  const impressos = (resumo?.impressos ?? 0) + (resumo?.cortesias ?? 0);
+  const emitidos = resumo?.emitidos ?? ticketsSold;
+  const checkedIn = resumo?.usados ?? tickets.filter((t) => t.status === "checked_in").length;
+  const attendanceRate = emitidos ? Math.round((checkedIn / emitidos) * 100) : 0;
   const avgTicketCents = orders.length ? Math.round(revenueCents / orders.length) : 0;
 
   // Receita por dia — série única, um eixo só.
@@ -222,7 +240,7 @@ function EventDashboard() {
           icon={<Ticket className="h-4 w-4" />}
           label="Ingressos vendidos"
           value={String(ticketsSold)}
-          hint={`Ticket médio ${brl(avgTicketCents)}`}
+          hint={`Site e portaria · ticket médio ${brl(avgTicketCents)}`}
           loading={loading}
         />
         <StatTile
@@ -235,8 +253,8 @@ function EventDashboard() {
         <StatTile
           icon={<Users className="h-4 w-4" />}
           label="Público esperado"
-          value={String(ticketsSold - checkedIn)}
-          hint="Ingressos ainda não utilizados"
+          value={String(Math.max(emitidos - checkedIn, 0))}
+          hint={`Ingressos ainda não utilizados (inclui ${impressos} impressos)`}
           loading={loading}
         />
       </div>
@@ -300,7 +318,8 @@ function EventDashboard() {
       <Card className="p-6">
         <h3 className="font-display text-lg font-semibold">Velocidade de venda por lote</h3>
         <p className="mt-1 mb-6 text-sm text-muted-foreground">
-          Quanto de cada lote já saiu. Lotes esgotados viram automaticamente para o próximo.
+          Quanto de cada lote vendido pelo sistema já saiu (site e portaria). Os lotes impressos ficam no
+          quadro de conferência da visão geral.
         </p>
         {types.length === 0 ? (
           <EmptyPlot message="Nenhum tipo de ingresso cadastrado." />
@@ -311,6 +330,7 @@ function EventDashboard() {
                 <div className="mb-2 text-sm font-medium">{t.name}</div>
                 <div className="space-y-2">
                   {[...(t.ticket_batches ?? [])]
+                    .filter((b: any) => b.canal !== "fisico")
                     .sort((a: any, b: any) => a.sort_order - b.sort_order)
                     .map((b: any) => {
                       const pct = b.quantity_total ? Math.round((b.quantity_sold / b.quantity_total) * 100) : 0;

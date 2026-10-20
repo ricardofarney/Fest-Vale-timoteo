@@ -14,6 +14,8 @@ import {
   Loader2,
   MessageCircle,
   ScanLine,
+  Printer,
+  ShieldCheck,
   ShoppingCart,
   Ticket,
   Users,
@@ -25,8 +27,18 @@ export const Route = createFileRoute("/_authenticated/admin/")({
 
 type Visao = {
   ingresso: { pedidos_pagos: number; aguardando: number; expirados: number; receita_cents: number; pela_portaria: number };
-  ingressos: { emitidos: number; usados: number; cancelados: number };
-  lotes: Array<{ tipo: string; lote: string; preco_cents: number; total: number; vendidos: number }>;
+  ingressos: {
+    vendidos: number; impressos: number; cortesias: number;
+    emitidos: number; usados: number; cancelados: number;
+  };
+  lotes: Array<{
+    tipo: string; lote: string; preco_cents: number; total: number; vendidos: number;
+    canal: string; oculto: boolean; a_definir: boolean; emitidos: number; usados: number; faixas: string | null;
+  }>;
+  impressos_conferencia: Array<{
+    lote: string; primeiro: number; ultimo: number; arquivo: string | null;
+    esperado: number; no_banco: number; cancelados: number; usados: number; integro: boolean;
+  }>;
   bar: { vendas: number; receita_cents: number; cortesias: number; canceladas: number };
   sangria_cents: number;
   estoque_alerta: Array<{ nome: string; restam: number; alerta: number }>;
@@ -117,9 +129,9 @@ function VisaoGeral() {
 
       {/* ───────────────────────────────────────────────────────── números */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Numero titulo="Receita total" valor={brl(receitaTotal)} detalhe="ingresso + bar" destaque />
-        <Numero titulo="Ingressos vendidos" valor={String(v?.ingressos.emitidos ?? 0)}
-                detalhe={`${v?.ingresso.pedidos_pagos ?? 0} pedidos pagos`} />
+        <Numero titulo="Receita total" valor={brl(receitaTotal)} detalhe="site + portaria + bar" destaque />
+        <Numero titulo="Ingressos vendidos" valor={String(v?.ingressos.vendidos ?? 0)}
+                detalhe={`site e portaria · ${v?.ingresso.pedidos_pagos ?? 0} pedidos pagos`} />
         <Numero titulo="Entradas registradas" valor={String(v?.ingressos.usados ?? 0)}
                 detalhe={`${presenca}% dos ingressos`} />
         <Numero titulo="Vendas no bar" valor={String(v?.bar.vendas ?? 0)}
@@ -131,10 +143,48 @@ function VisaoGeral() {
                 detalhe={`${v?.ingresso.pela_portaria ?? 0} vendidos na portaria`} />
         <Numero titulo="Aguardando pagamento" valor={String(v?.ingresso.aguardando ?? 0)}
                 detalhe={`${v?.ingresso.expirados ?? 0} expiraram`} />
-        <Numero titulo="Cortesias" valor={String(v?.bar.cortesias ?? 0)}
-                detalhe={`${v?.bar.canceladas ?? 0} vendas canceladas`} />
-        <Numero titulo="Sangria de caixa" valor={brl(v?.sangria_cents ?? 0)} detalhe="retirado do caixa" />
+        <Numero titulo="Ingressos impressos" valor={String(v?.ingressos.impressos ?? 0)}
+                detalhe={`+ ${v?.ingressos.cortesias ?? 0} cortesias · vendidos fora do sistema`} />
+        <Numero titulo="Cortesias do bar" valor={String(v?.bar.cortesias ?? 0)}
+                detalhe={`${v?.bar.canceladas ?? 0} vendas canceladas · sangria ${brl(v?.sangria_cents ?? 0)}`} />
       </div>
+
+      {/* ──────────────────────────────── conferência dos ingressos impressos */}
+      {(v?.impressos_conferencia.length ?? 0) > 0 && (() => {
+        const lista = v!.impressos_conferencia;
+        const tudoOk = lista.every((c) => c.integro);
+        return (
+          <Card className={`p-5 ${tudoOk ? "border-success/40" : "border-destructive/60"}`}>
+            <div className="flex items-center gap-2">
+              {tudoOk ? <ShieldCheck className="h-4 w-4 text-success" /> : <AlertTriangle className="h-4 w-4 text-destructive" />}
+              <h3 className="font-display text-lg font-semibold">
+                {tudoOk ? "Ingressos impressos íntegros" : "Atenção: ingressos impressos com divergência"}
+              </h3>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Cada bloco é comparado com a impressão digital dos arquivos de QR entregues para a gráfica.
+              O sistema não deixa apagar nem alterar esses ingressos.
+            </p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+              {lista.map((c) => (
+                <div key={c.lote} className="rounded-lg bg-secondary/40 px-3 py-2 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-medium">{c.lote}</span>
+                    <span className={`text-xs font-semibold ${c.integro ? "text-success" : "text-destructive"}`}>
+                      {c.integro ? "íntegro" : "DIVERGENTE"}
+                    </span>
+                  </div>
+                  <div className="mt-0.5 text-xs tabular-nums text-muted-foreground">
+                    Nº {String(c.primeiro).padStart(4, "0")}–{String(c.ultimo).padStart(4, "0")} · {c.no_banco} de {c.esperado}
+                    {c.usados > 0 && ` · ${c.usados} entraram`}
+                    {c.cancelados > 0 && ` · ${c.cancelados} cancelados`}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* ───────────────────────────────────────────────── o que pede atenção */}
       {(v?.estoque_alerta.length ?? 0) > 0 && (
@@ -169,16 +219,24 @@ function VisaoGeral() {
             <p className="text-sm text-muted-foreground">Nenhum lote cadastrado ainda.</p>
           )}
           {v?.lotes.map((l) => {
-            const pct = l.total > 0 ? Math.min(Math.round((l.vendidos / l.total) * 100), 100) : 0;
+            const impresso = l.canal === "fisico";
+            const feitos = impresso ? l.usados : l.vendidos;
+            const pct = l.total > 0 ? Math.min(Math.round((feitos / l.total) * 100), 100) : 0;
             return (
               <div key={`${l.tipo}-${l.lote}`}>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
                   <span className="font-medium">
-                    {l.tipo} · <span className="text-muted-foreground">{l.lote}</span>
+                    {l.lote}
+                    {impresso && <Printer className="ml-1.5 inline h-3.5 w-3.5 text-muted-foreground" />}
+                    {l.faixas && <span className="ml-2 text-xs tabular-nums text-muted-foreground">Nº {l.faixas}</span>}
+                    {l.a_definir && <span className="ml-2 text-xs text-muted-foreground">· em breve</span>}
+                    {l.oculto && <span className="ml-2 text-xs text-muted-foreground">· fora do site</span>}
                   </span>
                   <span className="tabular-nums text-muted-foreground">
-                    {brl(l.preco_cents)} — {l.vendidos}
-                    {l.total > 0 ? ` de ${l.total}` : ""}
+                    {l.preco_cents > 0 ? brl(l.preco_cents) : "—"} —{" "}
+                    {impresso
+                      ? `${l.emitidos} impressos · ${l.usados} entraram`
+                      : `${l.vendidos}${l.total > 0 ? ` de ${l.total}` : ""} vendidos`}
                   </span>
                 </div>
                 {l.total > 0 && (
